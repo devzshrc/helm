@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { GripVertical, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { Switch } from "~/components/ui/switch";
 import { Label } from "~/components/ui/label";
 import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import { Skeleton } from "~/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import {
   Select,
@@ -210,7 +212,13 @@ export function WorkflowEditor({ id }: { id: string }) {
   const utils = api.useUtils();
   const searchParams = useSearchParams();
   const get = api.workflows.get.useQuery({ id });
-  const runs = api.workflows.runs.useQuery({ workflowId: id });
+  const runs = api.workflows.runs.useQuery(
+    { workflowId: id },
+    {
+      staleTime: 30_000,
+      placeholderData: (previous) => previous,
+    },
+  );
 
   const [seeded, setSeeded] = useState(false);
   const [name, setName] = useState("");
@@ -265,7 +273,10 @@ export function WorkflowEditor({ id }: { id: string }) {
 
   const update = api.workflows.update.useMutation({
     onMutate: () => setSaveState("saving"),
-    onSuccess: async () => {
+    onSuccess: async (_res, vars) => {
+      if (typeof vars.enabled === "boolean") {
+        setEnabled(vars.enabled);
+      }
       await utils.workflows.list.invalidate();
       await utils.workflows.get.invalidate({ id });
       await runs.refetch();
@@ -301,13 +312,26 @@ export function WorkflowEditor({ id }: { id: string }) {
       toast.error(validation.errors.map((issue) => issue.message).join(" "));
       return;
     }
-    setEnabled(v);
     update.mutate({ id, enabled: v });
   }
   function changeTriggerType(type: TriggerType) {
     const compatible = nodesForTrigger(type);
     const removed = nodes.filter((n) => !compatible.includes(n.type));
-    setTrigger({ type, config: {} });
+    if (
+      removed.length > 0 &&
+      !window.confirm(
+        `${removed.length} incompatible ${removed.length === 1 ? "step" : "steps"} will be removed for this trigger. Continue?`,
+      )
+    ) {
+      return;
+    }
+    const nextFieldKeys = new Set(
+      TRIGGER_META[type].fields.map((field) => field.key),
+    );
+    const nextConfig = Object.fromEntries(
+      Object.entries(trigger.config).filter(([key]) => nextFieldKeys.has(key)),
+    );
+    setTrigger({ type, config: nextConfig });
     setNodes((ns) => ns.filter((n) => compatible.includes(n.type)));
     if (removed.length > 0) {
       toast.warning(
@@ -365,6 +389,15 @@ export function WorkflowEditor({ id }: { id: string }) {
         fields: { name, trigger, nodes },
       });
       const fields = res.patch?.fields;
+      if (
+        Array.isArray(fields?.nodes) &&
+        nodes.length > 0 &&
+        !window.confirm(
+          "Helm will replace the current steps on this canvas. Continue?",
+        )
+      ) {
+        return;
+      }
       if (fields?.trigger) setTrigger(fields.trigger);
       if (fields?.name && !name.trim()) setName(fields.name);
       if (Array.isArray(fields?.nodes)) {
@@ -406,6 +439,23 @@ export function WorkflowEditor({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seeded, searchParams]);
 
+  if (get.error) {
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-3 p-6 text-center">
+        <p className="text-lg font-semibold">Could not load workflow</p>
+        <p className="text-muted-foreground text-sm">{get.error.message}</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button variant="outline" onClick={() => void get.refetch()}>
+            Retry
+          </Button>
+          <Button variant="ghost" render={<Link href="/dashboard/workflows" />}>
+            Back to workflows
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!get.isLoading && get.data === null) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-3 p-6 text-center">
@@ -413,14 +463,31 @@ export function WorkflowEditor({ id }: { id: string }) {
         <p className="text-muted-foreground text-sm">
           It may have been deleted or you may not have access to it.
         </p>
+        <Button variant="outline" render={<Link href="/dashboard/workflows" />}>
+          Back to workflows
+        </Button>
       </div>
     );
   }
 
   if (get.isLoading || !seeded) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Spinner />
+      <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:p-8">
+        <div className="min-w-0 space-y-5">
+          <div className="flex items-center gap-3 border-b py-3">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+        <aside className="space-y-4">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+        </aside>
       </div>
     );
   }
@@ -467,6 +534,7 @@ export function WorkflowEditor({ id }: { id: string }) {
             <Switch
               id="wf-enabled"
               checked={enabled}
+              disabled={update.isPending}
               onCheckedChange={toggle}
             />
           </div>
@@ -483,7 +551,7 @@ export function WorkflowEditor({ id }: { id: string }) {
             Test
           </Button>
           <Button onClick={save} disabled={update.isPending}>
-            Save
+            {update.isPending ? "Saving…" : "Save"}
           </Button>
         </div>
 
@@ -708,47 +776,64 @@ export function WorkflowEditor({ id }: { id: string }) {
               variant="outline"
               size="sm"
               onClick={() => void runs.refetch()}
+              disabled={runs.isFetching}
             >
-              Refresh
+              {runs.isFetching ? "Refreshing…" : "Refresh"}
             </Button>
           </div>
           <div className="flex flex-col gap-2">
-            {(runs.data ?? []).slice(0, 5).map((run) => (
-              <button
-                key={run.id}
-                type="button"
-                onClick={() =>
-                  setRunView({
-                    status: run.status,
-                    error: run.error,
-                    steps: run.steps as RunView["steps"],
-                    input: run.input,
-                  })
-                }
-                className={`hover:bg-accent/40 flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${RUN_BORDER[run.status] ?? "border-l-muted border-l-2"}`}
-              >
-                <Badge
-                  className={
-                    HEALTH_STYLES[run.status] ??
-                    "bg-muted text-muted-foreground"
+            {runs.error ? (
+              <div className="border-destructive/30 bg-destructive/10 rounded-lg border p-3 text-sm">
+                <p className="font-medium">Could not load recent runs.</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {runs.error.message}
+                </p>
+              </div>
+            ) : runs.isLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 rounded-lg" />
+              ))
+            ) : (
+              (runs.data ?? []).slice(0, 5).map((run) => (
+                <button
+                  key={run.id}
+                  type="button"
+                  onClick={() =>
+                    setRunView({
+                      status: run.status,
+                      error: run.error,
+                      steps: run.steps as RunView["steps"],
+                      input: run.input,
+                    })
                   }
+                  className={`hover:bg-accent/40 flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${RUN_BORDER[run.status] ?? "border-l-muted border-l-2"}`}
                 >
-                  {run.status}
-                </Badge>
-                <span className="min-w-0 flex-1 truncate text-sm">
-                  {new Date(run.startedAt).toLocaleString()}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {typeof run.input === "object" &&
-                  run.input &&
-                  "source" in run.input &&
-                  typeof (run.input as { source?: unknown }).source === "string"
-                    ? (run.input as { source: string }).source
-                    : ""}
-                </span>
-              </button>
-            ))}
-            {(runs.data ?? []).length === 0 ? (
+                  <Badge
+                    className={
+                      HEALTH_STYLES[run.status] ??
+                      "bg-muted text-muted-foreground"
+                    }
+                  >
+                    {run.status}
+                  </Badge>
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    {new Date(run.startedAt).toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {typeof run.input === "object" &&
+                    run.input &&
+                    "source" in run.input &&
+                    typeof (run.input as { source?: unknown }).source ===
+                      "string"
+                      ? (run.input as { source: string }).source
+                      : ""}
+                  </span>
+                </button>
+              ))
+            )}
+            {!runs.error &&
+            !runs.isLoading &&
+            (runs.data ?? []).length === 0 ? (
               <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-6 text-center">
                 <Play className="text-muted-foreground/30 size-5" />
                 <p className="text-muted-foreground text-xs">

@@ -1,3 +1,3 @@
 "use client";
 
-export { default } from "~/components/segment-error";
+export { default } from "~/components/workflows/workflow-error";

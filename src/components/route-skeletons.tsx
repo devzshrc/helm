@@ -125,6 +125,32 @@ export function WorkflowsRouteSkeleton() {
   );
 }
 
+export function WorkflowEditorRouteSkeleton() {
+  return (
+    <>
+      <SiteHeader title="Workflow" />
+      <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:p-8">
+        <div className="min-w-0 space-y-5">
+          <div className="flex items-center gap-3 border-b py-3">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="mx-auto h-10 w-32 rounded-md" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+        <aside className="space-y-4">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+        </aside>
+      </div>
+    </>
+  );
+}
+
 export function SettingsRouteSkeleton() {
   return (
     <>

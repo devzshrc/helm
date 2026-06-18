@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 
 import { api, type RouterOutputs } from "~/trpc/react";
 import { patchInList, removeFromList } from "~/lib/optimistic";
@@ -86,6 +87,7 @@ export function WorkflowsList() {
   const [filter, setFilter] = useState<Filter>("all");
   const promptForwardedRef = useRef(false);
   const pendingCreatePromptRef = useRef<string | null>(null);
+  const creatingRef = useRef(false);
 
   const queryClient = useQueryClient();
   const wfListKey = getQueryKey(api.workflows.list);
@@ -102,6 +104,9 @@ export function WorkflowsList() {
       );
     },
     onError: (e) => toast.error(e.message),
+    onSettled: () => {
+      creatingRef.current = false;
+    },
   });
   const update = api.workflows.update.useMutation(
     patchInList<{ id: string; enabled?: boolean }, Wf>(
@@ -154,7 +159,10 @@ export function WorkflowsList() {
     if (promptParam && !promptForwardedRef.current) {
       promptForwardedRef.current = true;
       pendingCreatePromptRef.current = promptParam;
-      create.mutate({});
+      if (!creatingRef.current) {
+        creatingRef.current = true;
+        create.mutate({});
+      }
     }
     if (
       filterParam &&
@@ -171,6 +179,16 @@ export function WorkflowsList() {
       setFilter(filterParam);
     }
   }, [searchParams, create, router]);
+
+  function createWorkflow(input?: {
+    templateId?: string;
+    prompt?: string | null;
+  }) {
+    if (creatingRef.current || create.isPending) return;
+    creatingRef.current = true;
+    pendingCreatePromptRef.current = input?.prompt ?? null;
+    create.mutate(input?.templateId ? { templateId: input.templateId } : {});
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 p-4 lg:p-8">
@@ -191,9 +209,10 @@ export function WorkflowsList() {
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
-              pendingCreatePromptRef.current =
-                "Help me create a workflow. Ask me for any missing details, then draft the workflow for review.";
-              create.mutate({});
+              createWorkflow({
+                prompt:
+                  "Help me create a workflow. Ask me for any missing details, then draft the workflow for review.",
+              });
             }}
             disabled={create.isPending}
           >
@@ -203,8 +222,7 @@ export function WorkflowsList() {
           <Button
             variant="outline"
             onClick={() => {
-              pendingCreatePromptRef.current = null;
-              create.mutate({});
+              createWorkflow();
             }}
             disabled={create.isPending}
           >
@@ -222,7 +240,7 @@ export function WorkflowsList() {
           {TEMPLATES.map((t) => (
             <button
               key={t.id}
-              onClick={() => create.mutate({ templateId: t.id })}
+              onClick={() => createWorkflow({ templateId: t.id })}
               disabled={create.isPending}
               className="hover:border-foreground/15 hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 text-left transition-all hover:shadow-sm disabled:opacity-60"
             >
@@ -291,7 +309,22 @@ export function WorkflowsList() {
         ))}
       </div>
 
-      {list.isLoading ? (
+      {list.error ? (
+        <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-5">
+          <p className="text-sm font-semibold">Could not load workflows.</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {list.error.message}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => void list.refetch()}
+          >
+            <RefreshCw className="size-4" /> Retry
+          </Button>
+        </div>
+      ) : list.isLoading ? (
         <div className="grid gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-28 w-full" />
@@ -310,7 +343,7 @@ export function WorkflowsList() {
             </EmptyDescription>
             <Button
               className="mt-4"
-              onClick={() => create.mutate({})}
+              onClick={() => createWorkflow()}
               disabled={create.isPending}
             >
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} /> Start blank
@@ -324,6 +357,11 @@ export function WorkflowsList() {
           initial="hidden"
           animate="visible"
         >
+          {list.isFetching ? (
+            <p className="text-muted-foreground text-xs">
+              Refreshing workflow health…
+            </p>
+          ) : null}
           <AnimatePresence initial={false}>
             {visible.map((wf) => {
               const trigger = wf.trigger as WorkflowTrigger;
@@ -385,6 +423,7 @@ export function WorkflowsList() {
                         </Badge>
                         <Switch
                           checked={wf.enabled}
+                          disabled={update.isPending}
                           onCheckedChange={(v) =>
                             update.mutate({ id: wf.id, enabled: v })
                           }
@@ -407,11 +446,13 @@ export function WorkflowsList() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              disabled={test.isPending}
                               onClick={() => test.mutate({ id: wf.id })}
                             >
                               Test
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              disabled={duplicateWorkflow.isPending}
                               onClick={() =>
                                 duplicateWorkflow.mutate({ id: wf.id })
                               }
@@ -420,6 +461,7 @@ export function WorkflowsList() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               variant="destructive"
+                              disabled={del.isPending}
                               onClick={() => del.mutate({ id: wf.id })}
                             >
                               Delete

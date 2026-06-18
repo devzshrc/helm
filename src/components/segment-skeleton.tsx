@@ -3,6 +3,7 @@ import {
   CalendarRouteSkeleton,
   InboxRouteSkeleton,
   SettingsRouteSkeleton,
+  WorkflowEditorRouteSkeleton,
   WorkflowsRouteSkeleton,
 } from "~/components/route-skeletons";
 
@@ -13,6 +14,7 @@ import {
  */
 export function SegmentSkeleton({ title }: { title: string }) {
   if (title === "Calendar") return <CalendarRouteSkeleton />;
+  if (title === "Workflow") return <WorkflowEditorRouteSkeleton />;
   if (title === "Workflows") return <WorkflowsRouteSkeleton />;
   if (title === "Settings") return <SettingsRouteSkeleton />;
   if (title === "Agent") return <AgentRouteSkeleton />;

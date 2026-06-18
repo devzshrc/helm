@@ -69,6 +69,36 @@ describe("validateWorkflowSpec", () => {
     });
     expect(r.errors.some((e) => e.message.includes("cannot run"))).toBe(false);
   });
+
+  it("requires node config fields before enabling", () => {
+    const r = validateWorkflowSpec({
+      name: "X",
+      trigger: emailTrigger,
+      nodes: [{ id: "1", type: "send_email", config: {} }],
+    });
+    expect(r.ok).toBe(false);
+    expect(r.errors.map((e) => e.fieldKey)).toEqual(
+      expect.arrayContaining(["to", "subject", "body"]),
+    );
+  });
+
+  it("warns for external actions without blocking draft saves", () => {
+    const r = validateWorkflowSpec({
+      name: "X",
+      trigger: emailTrigger,
+      nodes: [
+        {
+          id: "1",
+          type: "send_email",
+          config: { to: "me@example.com", subject: "Hi", body: "Hello" },
+        },
+      ],
+    });
+    expect(r.ok).toBe(true);
+    expect(r.warnings.some((e) => e.message.includes("changes mail"))).toBe(
+      true,
+    );
+  });
 });
 
 describe("getWorkflowHealth", () => {
@@ -84,5 +114,20 @@ describe("getWorkflowHealth", () => {
       enabled: false,
     });
     expect(health.status).toBe("no_steps");
+  });
+
+  it("reports webhook_unhealthy only for enabled realtime workflows", () => {
+    const validation = validateWorkflowSpec({
+      name: "X",
+      trigger: emailTrigger,
+      nodes: [{ id: "1", type: "mark_read", config: {} }],
+    });
+    const health = getWorkflowHealth({
+      validation,
+      triggerType: "email",
+      enabled: true,
+      webhookStatus: "unknown",
+    });
+    expect(health.status).toBe("webhook_unhealthy");
   });
 });
