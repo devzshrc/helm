@@ -1,0 +1,378 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Figtree Variable", "Figtree", "Segoe UI", ui-sans-serif,
+    system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype",
+    "Book Antiqua", "Times New Roman", ui-serif, Georgia, Cambria, serif;
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Light mode — faint cool-blue neutrals, matching the premium sidebar. */
+  --background: oklch(0.985 0.006 255);
+  --foreground: oklch(0.17 0.01 264);
+  --blue-500: oklch(0.623 0.124 259.815);
+  --indigo-300: oklch(0.785 0.065 274.713);
+  --blue-300: oklch(0.809 0.055 251.813);
+  --violet-200: oklch(0.894 0.027 293.283);
+  --blue-400: oklch(0.707 0.095 254.624);
+  --white: oklch(1 0 0);
+  --black: oklch(0 0 0);
+  --transparent: transparent;
+  --card: oklch(0.995 0.004 255);
+  --card-foreground: oklch(0.17 0.01 264);
+  --popover: oklch(0.995 0.004 255);
+  --popover-foreground: oklch(0.17 0.01 264);
+  --primary: oklch(0.52 0.276 266);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.008 255);
+  --secondary-foreground: oklch(0.22 0.02 264);
+  --muted: oklch(0.96 0.008 255);
+  --muted-foreground: oklch(0.52 0.015 258);
+  --accent: oklch(0.95 0.012 258);
+  --accent-foreground: oklch(0.22 0.02 264);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.91 0.012 255);
+  --input: oklch(0.91 0.012 255);
+  --ring: oklch(0.52 0.276 266);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.52 0.276 266);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  /* Dark mode — deep navy neutrals, matching the premium sidebar. */
+  --background: oklch(0.17 0.018 264);
+  --foreground: oklch(0.95 0.008 255);
+  --card: oklch(0.205 0.022 264);
+  --card-foreground: oklch(0.95 0.008 255);
+  --popover: oklch(0.205 0.022 264);
+  --popover-foreground: oklch(0.95 0.008 255);
+  --primary: oklch(0.58 0.252 266);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.26 0.02 264);
+  --secondary-foreground: oklch(0.95 0.008 255);
+  --muted: oklch(0.26 0.02 264);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --accent: oklch(0.285 0.025 264);
+  --accent-foreground: oklch(0.97 0.008 255);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.58 0.18 264);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.58 0.252 266);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Scrollable but no visible scrollbar (used by the agent chat). */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .cpu-line-1 {
+    offset-path: path("M 10 20 h 79.5 q 5 0 5 5 v 30");
+    animation: animation-path 5s 1s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-2 {
+    offset-path: path("M 180 10 h -69.7 q -5 0 -5 5 v 40");
+    animation: animation-path 2s 6s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-3 {
+    offset-path: path("M 130 20 v 21.8 q 0 5 -5 5 h -25");
+    animation: animation-path 6s 4s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-4 {
+    offset-path: path("M 170 80 v -21.8 q 0 -5 -5 -5 h -65");
+    animation: animation-path 3s 3s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-5 {
+    offset-path: path("M 135 65 h 15 q 5 0 5 5 v 10 q 0 5 -5 5 h -39.8 q -5 0 -5 -5 v -35");
+    animation: animation-path 4s 9s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-6 {
+    offset-path: path("M 94.8 95 v -46");
+    animation: animation-path 7s 3s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-7 {
+    offset-path: path("M 88 88 v -15 q 0 -5 -5 -5 h -10 q -5 0 -5 -5 v -5 q 0 -5 5 -5 h 28");
+    animation: animation-path 4s 4s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+  .cpu-line-8 {
+    offset-path: path("M 30 30 h 25 q 5 0 5 5 v 6.5 q 0 5 5 5 h 35");
+    animation: animation-path 3s 3s infinite cubic-bezier(0.75, -0.01, 0, 0.99);
+  }
+}
+
+@keyframes animation-path {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+/* ------------------------------------------------------------------ *
+ * Premium sidebar — subtle bluish gradient. Deep navy in dark mode,
+ * soft cool wash in light mode. Rounds the inset panel + tints the
+ * sidebar foreground tokens so nav text/hover stay readable in both.
+ * ------------------------------------------------------------------ */
+.premium-sidebar [data-slot="sidebar-inner"] {
+  border-radius: 0.875rem;
+  overflow: hidden;
+}
+
+/* Light mode — soft cool-blue wash, dark text. */
+html:not(.dark) .premium-sidebar [data-slot="sidebar-inner"] {
+  --sidebar-foreground: oklch(0.28 0.02 264);
+  --sidebar-accent: oklch(0.55 0.12 262 / 10%);
+  --sidebar-accent-foreground: oklch(0.22 0.04 264);
+  --sidebar-border: oklch(0.5 0.06 262 / 14%);
+  --sidebar-ring: oklch(0.55 0.14 262 / 35%);
+  color: var(--sidebar-foreground);
+  background-color: #f3f6fd;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(60, 90, 180, 0.05) 1px, transparent 0),
+    radial-gradient(120% 80% at 30% -10%, rgba(120, 150, 230, 0.2), transparent 55%),
+    linear-gradient(180deg, #eaf0fb 0%, #f1f5fc 55%, #f5f8fd 100%);
+  background-size: 22px 22px, 100% 100%, 100% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(70, 100, 190, 0.08),
+    0 1px 2px rgba(30, 50, 110, 0.05);
+}
+
+/* Dark mode — deep midnight navy. */
+.dark .premium-sidebar [data-slot="sidebar-inner"] {
+  --sidebar: oklch(0.16 0.02 264);
+  --sidebar-foreground: oklch(0.92 0.008 255);
+  --sidebar-accent: oklch(1 0 0 / 6%);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.6 0.1 260 / 30%);
+  color: var(--sidebar-foreground);
+  background-color: #05070d;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(140, 165, 230, 0.03) 1px, transparent 0),
+    radial-gradient(120% 80% at 30% -10%, rgba(28, 44, 92, 0.4), transparent 55%),
+    linear-gradient(180deg, #0a0f1c 0%, #070a13 55%, #05070d 100%);
+  background-size: 22px 22px, 100% 100%, 100% 100%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* ------------------------------------------------------------------ *
+ * App-wide gradient wash — same tone as the premium sidebar, applied to
+ * the body + content inset in both themes for a consistent premium feel.
+ * ------------------------------------------------------------------ */
+.dark body {
+  background-color: var(--background);
+  background-image: radial-gradient(
+    120% 70% at 50% -10%,
+    rgba(28, 44, 92, 0.18),
+    transparent 55%
+  );
+}
+html:not(.dark) body {
+  background-color: var(--background);
+  background-image: radial-gradient(
+    120% 70% at 50% -10%,
+    rgba(120, 150, 230, 0.14),
+    transparent 55%
+  );
+}
+
+/* Content card carries the wash too (it sits over the body). */
+[data-slot="sidebar-inset"] {
+  background-image: radial-gradient(
+    125% 75% at 50% -8%,
+    rgba(120, 150, 230, 0.1),
+    transparent 60%
+  );
+}
+.dark [data-slot="sidebar-inset"] {
+  background-image: radial-gradient(
+    125% 75% at 50% -8%,
+    rgba(28, 44, 92, 0.16),
+    transparent 60%
+  );
+}
+
+/* CopilotKit re-declares its own opaque tokens inside [data-copilotkit];
+   make the agent chat transparent + map tokens to ours so it matches. */
+[data-copilotkit] {
+  --background: transparent;
+  background-color: transparent !important;
+}
+html.dark [data-copilotkit],
+html.dark [data-copilotkit].dark {
+  --foreground: oklch(0.95 0.008 255);
+  --card: oklch(0.205 0.022 264);
+  --card-foreground: oklch(0.95 0.008 255);
+  --popover: oklch(0.205 0.022 264);
+  --popover-foreground: oklch(0.95 0.008 255);
+  --secondary: oklch(0.26 0.02 264);
+  --muted: oklch(0.26 0.02 264);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --accent: oklch(0.285 0.025 264);
+  --border: oklch(1 0 0 / 9%);
+}
+html:not(.dark) [data-copilotkit],
+html:not(.dark) [data-copilotkit].dark {
+  --foreground: oklch(0.17 0.01 264);
+  --card: oklch(0.995 0.004 255);
+  --card-foreground: oklch(0.17 0.01 264);
+  --popover: oklch(0.995 0.004 255);
+  --popover-foreground: oklch(0.17 0.01 264);
+  --secondary: oklch(0.96 0.008 255);
+  --muted: oklch(0.96 0.008 255);
+  --muted-foreground: oklch(0.52 0.015 258);
+  --accent: oklch(0.95 0.012 258);
+  --border: oklch(0.91 0.012 255);
+}
+
+/* ── Theme toggle — View Transition radial wipe ────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  animation-name: vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── CTA button shimmer ────────────────────────────────────────────────── */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer-sweep 2.6s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+@keyframes shimmer-sweep {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ── Hide scrollbars ────────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

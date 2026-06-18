@@ -1,0 +1,41 @@
+name: Cron tick
+
+# Drains due scheduled workflows by hitting /api/cron/tick every 15 min.
+# Vercel Hobby caps crons at once/day, so the schedule lives here instead.
+# GitHub's scheduled runner can lag a few minutes under load — acceptable for
+# a 15-min drain. Requires repo secret CRON_SECRET (matches the Vercel env var);
+# override the target with repo variable CRON_TARGET_URL if the domain changes.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: cron-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          TARGET_URL: ${{ vars.CRON_TARGET_URL || 'https://helm.devzshrc.in/api/cron/tick' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repo secret is not set"
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' \
+            --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$TARGET_URL")
+          echo "HTTP $code"
+          cat /tmp/body
+          if [ "$code" != "200" ]; then
+            echo "::error::cron tick returned $code"
+            exit 1
+          fi
