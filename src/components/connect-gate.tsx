@@ -179,7 +179,8 @@ export function ConnectGate({ status }: { status: Status }) {
             </div>
           ) : connectedPlugin ? (
             <div className="rounded-lg border border-green-300/60 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200">
-              Connected {connectedPlugin === "gmail" ? "Gmail" : "Google Calendar"}.
+              Connected{" "}
+              {connectedPlugin === "gmail" ? "Gmail" : "Google Calendar"}.
             </div>
           ) : null}
           {allConnected ? (

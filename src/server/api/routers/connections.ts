@@ -54,7 +54,9 @@ export const connectionsRouter = createTRPCRouter({
       );
     }
 
-    const accountHealth = (plugin: "gmail" | "googlecalendar"): IntegrationHealth => {
+    const accountHealth = (
+      plugin: "gmail" | "googlecalendar",
+    ): IntegrationHealth => {
       const row = rows.find((r) => r.name === plugin);
       const config =
         row?.config && typeof row.config === "object"

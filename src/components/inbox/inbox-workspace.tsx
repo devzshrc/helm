@@ -72,7 +72,7 @@ const CAL_RE =
   /^(Invitation|Accepted|Declined|Tentative|Updated invitation|Canceled event|Cancelled event):/i;
 
 type SearchMode = "filter" | "gmail" | "semantic";
-type MailboxMode = "inbox" | "sent";
+type MailboxMode = "inbox" | "sent" | "starred" | "trash";
 type QueueMode =
   | "all"
   | "reply"
@@ -87,10 +87,16 @@ type QueueMode =
 
 function queueMode(t: ThreadRow): QueueMode {
   const hay = `${t.fromName} ${t.from} ${t.subject} ${t.snippet}`.toLowerCase();
-  if (t.labelIds.includes("STARRED") || ["Urgent", "Important"].includes(String(t.priority ?? ""))) {
+  if (
+    t.labelIds.includes("STARRED") ||
+    ["Urgent", "Important"].includes(String(t.priority ?? ""))
+  ) {
     return "vip";
   }
-  if (CAL_RE.test(t.subject) || /\b(calendar|invite|invitation|rsvp|meeting update)\b/.test(hay)) {
+  if (
+    CAL_RE.test(t.subject) ||
+    /\b(calendar|invite|invitation|rsvp|meeting update)\b/.test(hay)
+  ) {
     return "calendar";
   }
   if (/\b(unsubscribe|newsletter|digest|promotion|marketing)\b/.test(hay)) {
@@ -118,6 +124,47 @@ function queueMode(t: ThreadRow): QueueMode {
   return "archive";
 }
 
+const MAILBOXES: Array<{
+  value: MailboxMode;
+  label: string;
+  description: string;
+  emptyLabel: string;
+  labelIds?: string[];
+  icon: typeof MailOpen;
+}> = [
+  {
+    value: "inbox",
+    label: "Inbox",
+    description: "Incoming mail to triage",
+    emptyLabel: "Your inbox is empty.",
+    icon: MailOpen,
+  },
+  {
+    value: "sent",
+    label: "Sent",
+    description: "Messages sent by you",
+    emptyLabel: "No sent emails found.",
+    labelIds: ["SENT"],
+    icon: Send,
+  },
+  {
+    value: "starred",
+    label: "Starred",
+    description: "Saved threads and follow-ups",
+    emptyLabel: "No starred emails found.",
+    labelIds: ["STARRED"],
+    icon: Star,
+  },
+  {
+    value: "trash",
+    label: "Trash",
+    description: "Deleted mail",
+    emptyLabel: "Trash is empty.",
+    labelIds: ["TRASH"],
+    icon: Trash2,
+  },
+];
+
 export function InboxWorkspace({
   externalThreads,
   externalLoading,
@@ -135,18 +182,20 @@ export function InboxWorkspace({
   const debouncedServerSearch = useDebouncedValue(serverSearch, 300);
   const [searchMode, setSearchMode] = useState<SearchMode>("filter");
   const [mailbox, setMailbox] = useState<MailboxMode>("inbox");
+  const activeMailbox =
+    MAILBOXES.find((box) => box.value === mailbox) ?? MAILBOXES[0]!;
   const serverMode =
     searchMode === "filter"
       ? undefined
-      : mailbox === "sent"
-        ? "gmail"
-        : searchMode;
+      : mailbox === "inbox"
+        ? searchMode
+        : "gmail";
   const activeServerSearch =
     searchMode === "filter" ? "" : debouncedServerSearch;
   const threadsQuery = api.mail.list.useQuery(
     {
       q: activeServerSearch || undefined,
-      labelIds: mailbox === "sent" ? ["SENT"] : undefined,
+      labelIds: activeMailbox.labelIds,
       limit,
       mode: activeServerSearch ? serverMode : undefined,
     },
@@ -308,6 +357,21 @@ export function InboxWorkspace({
     "horizontal" | "vertical"
   >("horizontal");
 
+  const switchMailbox = useCallback((value: MailboxMode) => {
+    setMailbox(value);
+    setQueue("all");
+    setUnreadOnly(false);
+    setStarredOnly(false);
+    setHideCalendar(false);
+    setSelectedLabel(null);
+    setSelectedId(null);
+    setFocusedIndex(0);
+    setSelectMode(false);
+    setSelected(new Set());
+    setLimit(25);
+    setServerSearch("");
+  }, []);
+
   // Auto-label dialog
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoDesc, setAutoDesc] = useState("");
@@ -321,8 +385,8 @@ export function InboxWorkspace({
     const mode = searchParams.get("mode") as QueueMode | null;
     const box = searchParams.get("box") as MailboxMode | null;
     const thread = searchParams.get("thread");
-    if (box === "sent" || box === "inbox") {
-      setMailbox(box);
+    if (box && MAILBOXES.some((item) => item.value === box)) {
+      switchMailbox(box);
     }
     if (mode && queueLabels.some((item) => item.value === mode)) {
       setQueue(mode);
@@ -497,7 +561,11 @@ export function InboxWorkspace({
       c: () => setCompose({ mode: "new" }),
       "?": () => setHelpOpen(true),
       Escape: () => selectMode && exitSelect(),
-      "g i": () => router.push("/dashboard"),
+      "g h": () => router.push("/dashboard"),
+      "g i": () => switchMailbox("inbox"),
+      "g t": () => switchMailbox("sent"),
+      "g s": () => switchMailbox("starred"),
+      "g r": () => switchMailbox("trash"),
       "g c": () => router.push("/dashboard/calendar"),
     }),
     [
@@ -511,6 +579,7 @@ export function InboxWorkspace({
       markRead,
       router,
       selectMode,
+      switchMailbox,
       toggleSelect,
       exitSelect,
     ],
@@ -707,43 +776,19 @@ export function InboxWorkspace({
 
             <div className="px-4 pb-2">
               <div
-                className="grid rounded-xl border bg-muted/20 p-1 sm:grid-cols-2"
+                className="bg-muted/20 grid rounded-xl border p-1 sm:grid-cols-2 xl:grid-cols-4"
                 aria-label="Mailbox section"
               >
-                {[
-                  {
-                    value: "inbox" as const,
-                    label: "Inbox",
-                    description: "Incoming mail to triage",
-                    icon: MailOpen,
-                  },
-                  {
-                    value: "sent" as const,
-                    label: "Sent mail",
-                    description: "Messages sent by you",
-                    icon: Send,
-                  },
-                ].map(({ value, label, description, icon: Icon }) => (
+                {MAILBOXES.map(({ value, label, description, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => {
-                      setMailbox(value);
-                      setQueue("all");
-                      setUnreadOnly(false);
-                      setStarredOnly(false);
-                      setHideCalendar(false);
-                      setSelectedLabel(null);
-                      setSelectedId(null);
-                      setFocusedIndex(0);
-                      setLimit(25);
-                      setServerSearch("");
-                    }}
+                    onClick={() => switchMailbox(value)}
                     aria-pressed={mailbox === value}
                     className={cn(
                       "flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
                       mailbox === value
-                        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                        ? "bg-background text-foreground ring-border shadow-sm ring-1"
                         : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
                     )}
                   >
@@ -879,17 +924,22 @@ export function InboxWorkspace({
                   )}
                 </>
               )}
-              {searchMode === "filter" && mailbox === "sent" && (
+              {searchMode === "filter" && mailbox !== "inbox" && (
                 <>
-                  <Chip
-                    active={starredOnly}
-                    onClick={() => setStarredOnly((v) => !v)}
-                  >
-                    Starred
-                    {starredCount > 0 && (
-                      <span className="ml-1 opacity-60">{starredCount}</span>
-                    )}
-                  </Chip>
+                  <span className="text-muted-foreground shrink-0 px-1 text-xs">
+                    {activeMailbox.label}
+                  </span>
+                  {mailbox !== "starred" ? (
+                    <Chip
+                      active={starredOnly}
+                      onClick={() => setStarredOnly((v) => !v)}
+                    >
+                      Starred
+                      {starredCount > 0 && (
+                        <span className="ml-1 opacity-60">{starredCount}</span>
+                      )}
+                    </Chip>
+                  ) : null}
                   {hasActiveFilters && (
                     <button
                       type="button"
@@ -1045,11 +1095,7 @@ export function InboxWorkspace({
                 loadingMore={threadsQuery.isFetching && limit > 25}
                 onLoadMore={() => setLimit((l) => Math.min(l + 25, 200))}
                 isFiltered={hasActiveFilters || searchMode !== "filter"}
-                emptyLabel={
-                  mailbox === "sent"
-                    ? "No sent emails found."
-                    : "Your inbox is empty."
-                }
+                emptyLabel={activeMailbox.emptyLabel}
                 onClearFilters={clearFilters}
                 onSelect={(_id, i) => {
                   selectThreadAt(i);

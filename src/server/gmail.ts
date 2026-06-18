@@ -60,37 +60,36 @@ export async function listThreads(
       labelIds: requestedLabels,
       maxResults: opts.maxResults ?? 25,
     });
-    const summaryLabel = requestedLabels?.includes("SENT") ? "SENT" : null;
+    const summaryLabels = (requestedLabels ?? []).filter(
+      (label) => label !== "INBOX",
+    );
 
     const ids = (list.threads ?? [])
       .map((t) => t.id)
       .filter((x): x is string => !!x);
 
-    const threads = await mapConcurrent(
-      ids,
-      5,
-      async (id) => {
-        const full = (await gmail.threads.get({ id, format: "full" })) as {
-          messages?: GmailMessage[];
-        };
-        const messages = full.messages ?? [];
-        const candidates = summaryLabel
-          ? messages.filter((m) => (m.labelIds ?? []).includes(summaryLabel))
+    const threads = await mapConcurrent(ids, 5, async (id) => {
+      const full = (await gmail.threads.get({ id, format: "full" })) as {
+        messages?: GmailMessage[];
+      };
+      const messages = full.messages ?? [];
+      const candidates =
+        summaryLabels.length > 0
+          ? messages.filter((m) =>
+              summaryLabels.some((label) => (m.labelIds ?? []).includes(label)),
+            )
           : messages;
-        const latest = candidates[candidates.length - 1];
-        if (!latest) return null;
-        const summary = summarize(latest);
-        return {
-          ...summary,
-          threadId: id,
-          messageCount: messages.length,
-          hasUnread: messages.some((m) =>
-            (m.labelIds ?? []).includes("UNREAD"),
-          ),
-          hasAttachment: hasAttachment(messages),
-        } satisfies ThreadRow;
-      },
-    );
+      const latest = candidates[candidates.length - 1];
+      if (!latest) return null;
+      const summary = summarize(latest);
+      return {
+        ...summary,
+        threadId: id,
+        messageCount: messages.length,
+        hasUnread: messages.some((m) => (m.labelIds ?? []).includes("UNREAD")),
+        hasAttachment: hasAttachment(messages),
+      } satisfies ThreadRow;
+    });
 
     return threads.filter((t): t is ThreadRow => t !== null);
   });

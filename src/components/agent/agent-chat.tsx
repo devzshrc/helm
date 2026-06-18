@@ -5,15 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import {
-  Check,
-  Menu,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Check, Menu, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { fadeUp, listItem, staggerContainer, tapScale } from "~/lib/motion";
 
@@ -610,15 +602,12 @@ function ChatHistoryRail({
                       <button type="button" onClick={commitRename}>
                         <Check className="text-muted-foreground size-4" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(null)}
-                      >
+                      <button type="button" onClick={() => setEditingId(null)}>
                         <X className="text-muted-foreground size-4" />
                       </button>
                     </div>
                   ) : (
-                  <div className="flex items-start gap-2">
+                    <div className="flex items-start gap-2">
                       <button
                         type="button"
                         onMouseEnter={() => onPrefetch(session.id)}
@@ -666,7 +655,7 @@ function ChatHistoryRail({
 
   return (
     <>
-      <aside className="hidden w-72 shrink-0 border-r bg-muted/20 md:block">
+      <aside className="bg-muted/20 hidden w-72 shrink-0 border-r md:block">
         {renderBody()}
       </aside>
       <AnimatePresence>
@@ -679,7 +668,7 @@ function ChatHistoryRail({
           >
             <button
               type="button"
-              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              className="bg-background/80 absolute inset-0 backdrop-blur-sm"
               onClick={() => onMobileOpenChange(false)}
               aria-label="Close chats"
             />

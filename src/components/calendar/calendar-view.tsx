@@ -296,7 +296,9 @@ export function CalendarView() {
       eachDayOfInterval({ start: startOfWeek(cursor), end: endOfWeek(cursor) }),
     [cursor],
   );
-  const nextEvent = data.find((event) => event.start && new Date(event.start) >= new Date());
+  const nextEvent = data.find(
+    (event) => event.start && new Date(event.start) >= new Date(),
+  );
 
   return (
     <div className="grid h-full min-h-0 gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -479,7 +481,7 @@ export function CalendarView() {
         {/* Active view */}
         <div className="min-h-0 flex-1">
           {events.error ? (
-            <div className="m-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm">
+            <div className="border-destructive/30 bg-destructive/10 m-3 rounded-lg border p-3 text-sm">
               <p className="font-medium">
                 {events.error.data?.code === "PRECONDITION_FAILED"
                   ? "Reconnect Google Calendar"
@@ -544,17 +546,19 @@ export function CalendarView() {
       </div>
 
       <aside className="hidden min-h-0 flex-col gap-3 xl:flex">
-        <div className="rounded-xl border bg-background p-3">
+        <div className="bg-background rounded-xl border p-3">
           <p className="text-sm font-semibold">Meeting prep</p>
           {nextEvent ? (
             <div className="mt-3 space-y-2">
-              <p className="truncate text-sm font-medium">{nextEvent.summary}</p>
+              <p className="truncate text-sm font-medium">
+                {nextEvent.summary}
+              </p>
               <p className="text-muted-foreground text-xs">
                 {nextEvent.start
                   ? new Date(nextEvent.start).toLocaleString()
                   : "Time TBD"}
               </p>
-              <div className="rounded-lg border bg-muted/20 p-2 text-xs">
+              <div className="bg-muted/20 rounded-lg border p-2 text-xs">
                 <p className="font-medium">Prep prompts</p>
                 <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-1">
                   <li>Review related email before joining.</li>
@@ -569,7 +573,7 @@ export function CalendarView() {
             </p>
           )}
         </div>
-        <div className="min-h-0 flex-1 rounded-xl border bg-background p-3">
+        <div className="bg-background min-h-0 flex-1 rounded-xl border p-3">
           <ConciergePanel />
         </div>
       </aside>

@@ -64,10 +64,7 @@ const TIMEZONES = [
   "Pacific/Auckland",
 ] as const;
 
-function prefText(
-  value: unknown,
-  fallback: string,
-): string {
+function prefText(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback;
 }
 
@@ -271,7 +268,9 @@ export function PreferencesSection() {
             </Field>
             <Field>
               <FieldTitle>Automation comfort</FieldTitle>
-              <FieldDescription>How conservative Helm should be.</FieldDescription>
+              <FieldDescription>
+                How conservative Helm should be.
+              </FieldDescription>
               <Select
                 value={automationComfort}
                 onValueChange={(value) => value && setAutomationComfort(value)}
@@ -315,7 +314,9 @@ export function PreferencesSection() {
             </Field>
             <Field>
               <FieldTitle>Protected senders</FieldTitle>
-              <FieldDescription>Never auto-archive these senders.</FieldDescription>
+              <FieldDescription>
+                Never auto-archive these senders.
+              </FieldDescription>
               <Textarea
                 value={protectedSenders}
                 onChange={(event) => setProtectedSenders(event.target.value)}

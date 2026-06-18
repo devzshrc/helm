@@ -40,7 +40,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return (
       <DashboardLoading
         label={
-          sessionPending ? "Checking your session" : "Checking Gmail and Calendar"
+          sessionPending
+            ? "Checking your session"
+            : "Checking Gmail and Calendar"
         }
       />
     );

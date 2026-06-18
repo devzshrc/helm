@@ -1,6 +1,12 @@
 "use client";
 
-import { CheckCircle2, LockKeyhole, Mail, ShieldCheck, Workflow } from "lucide-react";
+import {
+  CheckCircle2,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Workflow,
+} from "lucide-react";
 
 import {
   Card,
@@ -56,7 +62,7 @@ export function TrustSafetySection() {
               </p>
             </div>
           </div>
-          <div className="rounded-lg border bg-muted/20 p-3">
+          <div className="bg-muted/20 rounded-lg border p-3">
             <p className="text-sm font-semibold">Actions requiring review</p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {GUARDED_ACTIONS.map((action) => (

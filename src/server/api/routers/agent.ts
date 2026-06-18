@@ -29,14 +29,14 @@ export const agentRouter = createTRPCRouter({
     list: protectedProcedure.query(({ ctx }) =>
       timeDev("agent.sessions.list", () =>
         ctx.db
-        .select({
-          id: chatSessions.id,
-          title: chatSessions.title,
-          updatedAt: chatSessions.updatedAt,
-        })
-        .from(chatSessions)
-        .where(eq(chatSessions.tenantId, ctx.session.user.id))
-        .orderBy(desc(chatSessions.updatedAt)),
+          .select({
+            id: chatSessions.id,
+            title: chatSessions.title,
+            updatedAt: chatSessions.updatedAt,
+          })
+          .from(chatSessions)
+          .where(eq(chatSessions.tenantId, ctx.session.user.id))
+          .orderBy(desc(chatSessions.updatedAt)),
       ),
     ),
 
@@ -52,17 +52,17 @@ export const agentRouter = createTRPCRouter({
       .input(z.object({ id: z.string() }))
       .query(async ({ ctx, input }) => {
         return timeDev("agent.sessions.load", async () => {
-        const [row] = await ctx.db
-          .select({ messages: chatSessions.messages })
-          .from(chatSessions)
-          .where(
-            and(
-              eq(chatSessions.id, input.id),
-              eq(chatSessions.tenantId, ctx.session.user.id),
-            ),
-          )
-          .limit(1);
-        return { messages: (row?.messages ?? []) as unknown[] };
+          const [row] = await ctx.db
+            .select({ messages: chatSessions.messages })
+            .from(chatSessions)
+            .where(
+              and(
+                eq(chatSessions.id, input.id),
+                eq(chatSessions.tenantId, ctx.session.user.id),
+              ),
+            )
+            .limit(1);
+          return { messages: (row?.messages ?? []) as unknown[] };
         });
       }),
 

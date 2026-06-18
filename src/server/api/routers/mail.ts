@@ -145,66 +145,72 @@ export const mailRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-      return await timeDev("mail.list", async () => {
-      const tenantId = ctx.session.user.id;
-      const limit = input?.limit ?? 25;
-      if (input?.mode === "semantic" && input.q?.trim()) {
-        const semantic = await semanticSearchMail(tenantId, input.q, limit);
-        const cachedThreads =
-          (await listInboxCached(tenantId, Math.max(limit * 3, 75))) ?? [];
-        const byThreadId = new Map(
-          cachedThreads.map((thread) => [thread.threadId, thread]),
-        );
-        return semantic.results.map((t) => ({
-          ...(byThreadId.get(t.threadId) ?? {}),
-          id: t.gmailId,
-          threadId: t.threadId,
-          from: t.from ?? byThreadId.get(t.threadId)?.from ?? "",
-          fromName:
-            byThreadId.get(t.threadId)?.fromName ?? t.from ?? "Unknown sender",
-          to: "",
-          subject:
-            t.subject ?? byThreadId.get(t.threadId)?.subject ?? "(no subject)",
-          snippet: t.snippet ?? byThreadId.get(t.threadId)?.snippet ?? "",
-          receivedAt:
-            t.receivedAt?.getTime() ??
-            byThreadId.get(t.threadId)?.receivedAt ??
-            null,
-          labelIds: byThreadId.get(t.threadId)?.labelIds ?? ([] as string[]),
-          unread: byThreadId.get(t.threadId)?.unread ?? false,
-          messageCount: byThreadId.get(t.threadId)?.messageCount ?? 1,
-          hasUnread: byThreadId.get(t.threadId)?.hasUnread ?? false,
-          hasAttachment: byThreadId.get(t.threadId)?.hasAttachment ?? false,
-          priority: t.priority,
-        }));
-      }
-      // Default inbox view: serve from Corsair's cache, fall back to live
-      // (which repopulates the cache). Searches always go live for accuracy.
-      // Fall back when the cache is null OR empty — an empty array is NOT
-      // nullish, so `??=` alone would strand the inbox blank when the local
-      // message cache hasn't been populated (only threads/sent synced).
-      let threads =
-        !input?.q && !input?.labelIds
-          ? await listInboxCached(tenantId, limit)
-          : null;
-      if (!threads || threads.length === 0) {
-        threads = await listThreads(tenantId, {
-          q: input?.q,
-          labelIds: input?.labelIds,
-          maxResults: limit,
+        return await timeDev("mail.list", async () => {
+          const tenantId = ctx.session.user.id;
+          const limit = input?.limit ?? 25;
+          if (input?.mode === "semantic" && input.q?.trim()) {
+            const semantic = await semanticSearchMail(tenantId, input.q, limit);
+            const cachedThreads =
+              (await listInboxCached(tenantId, Math.max(limit * 3, 75))) ?? [];
+            const byThreadId = new Map(
+              cachedThreads.map((thread) => [thread.threadId, thread]),
+            );
+            return semantic.results.map((t) => ({
+              ...(byThreadId.get(t.threadId) ?? {}),
+              id: t.gmailId,
+              threadId: t.threadId,
+              from: t.from ?? byThreadId.get(t.threadId)?.from ?? "",
+              fromName:
+                byThreadId.get(t.threadId)?.fromName ??
+                t.from ??
+                "Unknown sender",
+              to: "",
+              subject:
+                t.subject ??
+                byThreadId.get(t.threadId)?.subject ??
+                "(no subject)",
+              snippet: t.snippet ?? byThreadId.get(t.threadId)?.snippet ?? "",
+              receivedAt:
+                t.receivedAt?.getTime() ??
+                byThreadId.get(t.threadId)?.receivedAt ??
+                null,
+              labelIds:
+                byThreadId.get(t.threadId)?.labelIds ?? ([] as string[]),
+              unread: byThreadId.get(t.threadId)?.unread ?? false,
+              messageCount: byThreadId.get(t.threadId)?.messageCount ?? 1,
+              hasUnread: byThreadId.get(t.threadId)?.hasUnread ?? false,
+              hasAttachment: byThreadId.get(t.threadId)?.hasAttachment ?? false,
+              priority: t.priority,
+            }));
+          }
+          // Default inbox view: serve from Corsair's cache, fall back to live
+          // (which repopulates the cache). Searches always go live for accuracy.
+          // Fall back when the cache is null OR empty — an empty array is NOT
+          // nullish, so `??=` alone would strand the inbox blank when the local
+          // message cache hasn't been populated (only threads/sent synced).
+          let threads =
+            !input?.q && !input?.labelIds
+              ? await listInboxCached(tenantId, limit)
+              : null;
+          if (!threads || threads.length === 0) {
+            threads = await listThreads(tenantId, {
+              q: input?.q,
+              labelIds: input?.labelIds,
+              maxResults: limit,
+            });
+          }
+          const priorities = await getPrioritiesFromMeta(
+            tenantId,
+            threads.map((t) => t.id),
+          );
+          const needsTriage = threads.filter((t) => !priorities.has(t.id));
+          if (needsTriage.length > 0)
+            void safeEnsureTriaged(tenantId, needsTriage);
+          return threads.map((t) => ({
+            ...t,
+            priority: priorities.get(t.id) ?? null,
+          }));
         });
-      }
-      const priorities = await getPrioritiesFromMeta(
-        tenantId,
-        threads.map((t) => t.id),
-      );
-      const needsTriage = threads.filter((t) => !priorities.has(t.id));
-      if (needsTriage.length > 0) void safeEnsureTriaged(tenantId, needsTriage);
-      return threads.map((t) => ({
-        ...t,
-        priority: priorities.get(t.id) ?? null,
-      }));
-      });
       } catch (error) {
         mailError(error);
       }

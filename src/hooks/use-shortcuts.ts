@@ -77,7 +77,11 @@ export const SHORTCUTS: { keys: string; label: string }[] = [
   { keys: "u", label: "Mark read / unread" },
   { keys: "c", label: "Compose" },
   { keys: "⌘ Enter", label: "Send" },
-  { keys: "g i", label: "Go to Inbox" },
+  { keys: "g h", label: "Go to Dashboard" },
+  { keys: "g i", label: "Show Inbox" },
+  { keys: "g t", label: "Show Sent" },
+  { keys: "g s", label: "Show Starred" },
+  { keys: "g r", label: "Show Trash" },
   { keys: "g c", label: "Go to Calendar" },
   { keys: "?", label: "Show this help" },
 ];

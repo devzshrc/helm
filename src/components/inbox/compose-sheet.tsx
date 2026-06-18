@@ -134,7 +134,7 @@ export function ComposeSheet({
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <div className="rounded-lg border bg-muted/20 p-3">
+          <div className="bg-muted/20 rounded-lg border p-3">
             <div className="mb-3 flex items-center gap-2">
               <ShieldCheck className="text-muted-foreground h-4 w-4" />
               <p className="text-sm font-semibold">AI Reply Studio</p>
@@ -241,7 +241,7 @@ export function ComposeSheet({
             />
           </Field>
           {body.trim() ? (
-            <div className="rounded-lg border bg-background p-3">
+            <div className="bg-background rounded-lg border p-3">
               <div className="mb-2 flex items-center gap-2 text-sm font-medium">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 Source-grounded review
@@ -256,7 +256,11 @@ export function ComposeSheet({
                     variant="outline"
                     size="sm"
                     disabled={draft.isPending}
-                    onClick={() => draftWithControls("Make the existing draft clearer without adding unsupported facts.")}
+                    onClick={() =>
+                      draftWithControls(
+                        "Make the existing draft clearer without adding unsupported facts.",
+                      )
+                    }
                   >
                     Regenerate
                   </Button>
@@ -264,7 +268,9 @@ export function ComposeSheet({
                     variant="outline"
                     size="sm"
                     disabled={draft.isPending}
-                    onClick={() => draftWithControls("Make the existing draft shorter.")}
+                    onClick={() =>
+                      draftWithControls("Make the existing draft shorter.")
+                    }
                   >
                     Shorten
                   </Button>

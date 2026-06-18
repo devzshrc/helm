@@ -85,13 +85,22 @@ export function WorkflowsList() {
   });
   const [filter, setFilter] = useState<Filter>("all");
   const promptForwardedRef = useRef(false);
+  const pendingCreatePromptRef = useRef<string | null>(null);
 
   const queryClient = useQueryClient();
   const wfListKey = getQueryKey(api.workflows.list);
   type Wf = RouterOutputs["workflows"]["list"][number];
 
   const create = api.workflows.create.useMutation({
-    onSuccess: ({ id }) => router.push(`/dashboard/workflows/${id}`),
+    onSuccess: ({ id }) => {
+      const prompt = pendingCreatePromptRef.current;
+      pendingCreatePromptRef.current = null;
+      router.push(
+        prompt
+          ? `/dashboard/workflows/${id}?prompt=${encodeURIComponent(prompt)}`
+          : `/dashboard/workflows/${id}`,
+      );
+    },
     onError: (e) => toast.error(e.message),
   });
   const update = api.workflows.update.useMutation(
@@ -144,15 +153,8 @@ export function WorkflowsList() {
     // in-editor AI helper drafts the steps onto the canvas.
     if (promptParam && !promptForwardedRef.current) {
       promptForwardedRef.current = true;
-      create.mutate(
-        {},
-        {
-          onSuccess: ({ id }) =>
-            router.replace(
-              `/dashboard/workflows/${id}?prompt=${encodeURIComponent(promptParam)}`,
-            ),
-        },
-      );
+      pendingCreatePromptRef.current = promptParam;
+      create.mutate({});
     }
     if (
       filterParam &&
@@ -187,7 +189,25 @@ export function WorkflowsList() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => create.mutate({})} disabled={create.isPending}>
+          <Button
+            onClick={() => {
+              pendingCreatePromptRef.current =
+                "Help me create a workflow. Ask me for any missing details, then draft the workflow for review.";
+              create.mutate({});
+            }}
+            disabled={create.isPending}
+          >
+            <HugeiconsIcon icon={WorkflowSquare03Icon} strokeWidth={2} />
+            Create with AI
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              pendingCreatePromptRef.current = null;
+              create.mutate({});
+            }}
+            disabled={create.isPending}
+          >
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} /> Start blank
           </Button>
         </div>

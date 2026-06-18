@@ -55,7 +55,9 @@ function mapEvent(e: RawEvent): CalEvent {
 // birthday!" ghost) or miss freshly-created ones.
 const CACHE_TTL_MS = 90_000;
 
-function cachedEvents(rows: (typeof calendarEvents.$inferSelect)[]): CalEvent[] {
+function cachedEvents(
+  rows: (typeof calendarEvents.$inferSelect)[],
+): CalEvent[] {
   return rows.map((r) => ({
     id: r.eventId,
     summary: r.title,

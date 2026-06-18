@@ -46,11 +46,7 @@ export function IntegrationsSection({ status }: { status: Status }) {
       {
         onSuccess: () => {
           toast.success(
-            `Disconnected ${
-              plugin === "gmail"
-                ? "Gmail"
-                : "Google Calendar"
-            }`,
+            `Disconnected ${plugin === "gmail" ? "Gmail" : "Google Calendar"}`,
           );
           startTransition(() => router.refresh());
         },
@@ -69,7 +65,9 @@ export function IntegrationsSection({ status }: { status: Status }) {
   ) {
     const connected = health.connected && health.healthy;
     const needsReconnect =
-      health.connected && !health.healthy && health.repairAction === "reconnect";
+      health.connected &&
+      !health.healthy &&
+      health.repairAction === "reconnect";
     return (
       <Item variant="outline" key={plugin}>
         <ItemMedia>
@@ -79,7 +77,7 @@ export function IntegrationsSection({ status }: { status: Status }) {
           <ItemTitle>{label}</ItemTitle>
           <p className="text-muted-foreground mt-1 text-xs">
             {connected
-              ? health.externalAccountId ?? "Connected and ready"
+              ? (health.externalAccountId ?? "Connected and ready")
               : needsReconnect
                 ? "Connection needs to be refreshed"
                 : "Not connected"}

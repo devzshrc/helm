@@ -22,7 +22,10 @@ function calendarWindow(query: string) {
   if (q.includes("last month")) {
     return { start: subDays(startOfDay(now), 45), end: endOfDay(now) };
   }
-  return { start: subDays(startOfDay(now), 7), end: addDays(endOfDay(now), 30) };
+  return {
+    start: subDays(startOfDay(now), 7),
+    end: addDays(endOfDay(now), 30),
+  };
 }
 
 function wantsCalendar(query: string) {
@@ -32,12 +35,20 @@ function wantsCalendar(query: string) {
 }
 
 function wantsMail(query: string) {
-  return !wantsCalendar(query) || /\b(email|emails|mail|thread|threads|reply|inbox|from|pricing|follow up|follow-up)\b/i.test(query);
+  return (
+    !wantsCalendar(query) ||
+    /\b(email|emails|mail|thread|threads|reply|inbox|from|pricing|follow up|follow-up)\b/i.test(
+      query,
+    )
+  );
 }
 
 function simpleGmailQuery(query: string) {
   const q = query.trim();
-  const from = /\bfrom\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-z][A-Za-z0-9._-]*)/i.exec(q)?.[1];
+  const from =
+    /\bfrom\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-z][A-Za-z0-9._-]*)/i.exec(
+      q,
+    )?.[1];
   const parts: string[] = [];
   if (from) parts.push(`from:${from}`);
   if (/last month/i.test(q)) parts.push("newer_than:45d");
@@ -77,7 +88,9 @@ export const searchRouter = createTRPCRouter({
             const semantic = await semanticSearchMail(tenantId, query, limit);
             const cached =
               (await listInboxCached(tenantId, Math.max(limit * 3, 30))) ?? [];
-            const byThread = new Map(cached.map((thread) => [thread.threadId, thread]));
+            const byThread = new Map(
+              cached.map((thread) => [thread.threadId, thread]),
+            );
             mail = semantic.results.map((result) => ({
               ...(byThread.get(result.threadId) ?? {}),
               id: result.gmailId,
@@ -92,7 +105,8 @@ export const searchRouter = createTRPCRouter({
                 result.subject ??
                 byThread.get(result.threadId)?.subject ??
                 "(no subject)",
-              snippet: result.snippet ?? byThread.get(result.threadId)?.snippet ?? "",
+              snippet:
+                result.snippet ?? byThread.get(result.threadId)?.snippet ?? "",
               receivedAt:
                 result.receivedAt?.getTime() ??
                 byThread.get(result.threadId)?.receivedAt ??
@@ -101,7 +115,8 @@ export const searchRouter = createTRPCRouter({
               unread: byThread.get(result.threadId)?.unread ?? false,
               messageCount: byThread.get(result.threadId)?.messageCount ?? 1,
               hasUnread: byThread.get(result.threadId)?.hasUnread ?? false,
-              hasAttachment: byThread.get(result.threadId)?.hasAttachment ?? false,
+              hasAttachment:
+                byThread.get(result.threadId)?.hasAttachment ?? false,
               priority: result.priority,
             }));
           }
@@ -135,13 +150,28 @@ export const searchRouter = createTRPCRouter({
           });
           const needle = query.toLowerCase();
           const filtered = events.filter((event) => {
-            const text = `${event.summary} ${event.location ?? ""} ${event.attendees
-              .map((a) => a.email)
-              .join(" ")}`.toLowerCase();
+            const text =
+              `${event.summary} ${event.location ?? ""} ${event.attendees
+                .map((a) => a.email)
+                .join(" ")}`.toLowerCase();
             const words = needle
               .split(/\W+/)
-              .filter((word) => word.length > 3 && !["meeting", "meetings", "calendar", "events", "next", "this", "week"].includes(word));
-            return words.length === 0 || words.some((word) => text.includes(word));
+              .filter(
+                (word) =>
+                  word.length > 3 &&
+                  ![
+                    "meeting",
+                    "meetings",
+                    "calendar",
+                    "events",
+                    "next",
+                    "this",
+                    "week",
+                  ].includes(word),
+              );
+            return (
+              words.length === 0 || words.some((word) => text.includes(word))
+            );
           });
           groups.push({
             type: "calendar_events",
@@ -165,7 +195,12 @@ export const searchRouter = createTRPCRouter({
       groups.push({
         type: "actions",
         items: [
-          { id: "ask-agent", label: "Ask Helm", href: "/dashboard/agent", prompt: query },
+          {
+            id: "ask-agent",
+            label: "Ask Helm",
+            href: "/dashboard/agent",
+            prompt: query,
+          },
           {
             id: "new-workflow",
             label: "Create workflow from this",
