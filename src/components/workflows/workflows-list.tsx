@@ -365,6 +365,7 @@ export function WorkflowsList() {
           <AnimatePresence initial={false}>
             {visible.map((wf) => {
               const trigger = wf.trigger as WorkflowTrigger;
+              const triggerMeta = TRIGGER_META[trigger.type];
               const stepCount = Array.isArray(wf.nodes) ? wf.nodes.length : 0;
               return (
                 <motion.div key={wf.id} layout variants={listItem} exit="exit">
@@ -378,7 +379,7 @@ export function WorkflowsList() {
                       >
                         <span className="bg-background flex size-10 items-center justify-center rounded-md border">
                           <TriggerIcon
-                            type={trigger.type}
+                            type={triggerMeta ? trigger.type : "email"}
                             className="text-primary"
                           />
                         </span>
@@ -397,9 +398,11 @@ export function WorkflowsList() {
                           </span>
                           <span className="text-muted-foreground mt-1 block text-sm">
                             When{" "}
-                            {TRIGGER_META[trigger.type].label.toLowerCase()},
-                            run {stepCount} {stepCount === 1 ? "step" : "steps"}
-                            .
+                            {(
+                              triggerMeta?.label ?? "unknown trigger"
+                            ).toLowerCase()}
+                            , run {stepCount}{" "}
+                            {stepCount === 1 ? "step" : "steps"}.
                           </span>
                           <span className="text-muted-foreground mt-2 block text-xs">
                             {attentionText(wf)}

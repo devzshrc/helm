@@ -6,12 +6,9 @@ import { Field, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+  NativeSelect,
+  NativeSelectOption,
+} from "~/components/ui/native-select";
 
 /** Renders a config form from field descriptors. */
 export function ConfigForm({
@@ -47,21 +44,19 @@ export function ConfigForm({
           </FieldLabel>
 
           {f.type === "select" ? (
-            <Select
+            <NativeSelect
+              id={`cfg-${f.key}`}
+              className="w-full"
               value={values[f.key] ?? ""}
-              onValueChange={(v) => onChange(f.key, v ?? "")}
+              onChange={(e) => onChange(f.key, e.target.value)}
             >
-              <SelectTrigger id={`cfg-${f.key}`}>
-                <SelectValue placeholder="Choose…" />
-              </SelectTrigger>
-              <SelectContent>
-                {f.options?.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <NativeSelectOption value="">Choose…</NativeSelectOption>
+              {f.options?.map((o) => (
+                <NativeSelectOption key={o.value} value={o.value}>
+                  {o.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
           ) : f.type === "textarea" ? (
             <Textarea
               id={`cfg-${f.key}`}

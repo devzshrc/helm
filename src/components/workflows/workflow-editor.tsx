@@ -19,12 +19,9 @@ import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+  NativeSelect,
+  NativeSelectOption,
+} from "~/components/ui/native-select";
 import {
   Sheet,
   SheetContent,
@@ -63,6 +60,13 @@ type ConfigTarget = { kind: "trigger" } | { kind: "node"; id: string } | null;
 function summarize(config: Record<string, string>): string {
   const vals = Object.values(config).filter(Boolean);
   return vals.length ? vals.join(" · ") : "Needs details";
+}
+
+function isTriggerType(value: unknown): value is TriggerType {
+  return (
+    typeof value === "string" &&
+    Object.prototype.hasOwnProperty.call(TRIGGER_META, value)
+  );
 }
 
 const HEALTH_STYLES: Record<string, string> = {
@@ -150,6 +154,35 @@ function StepCard({
   onDragEnter: () => void;
   onDragEnd: () => void;
 }) {
+  const meta = NODE_META[node.type];
+  if (!meta) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <div className="bg-border h-3 w-px" />
+        <Card className="border-destructive/30 bg-destructive/10 flex w-full items-center gap-3 rounded-md p-4">
+          <span
+            aria-hidden
+            className="text-muted-foreground/50 -mr-1 cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">Unknown step: {node.type}</p>
+              <Badge variant="destructive">Remove to repair</Badge>
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              This saved step no longer exists in the workflow catalog.
+            </p>
+          </div>
+          <Button variant="ghost" size="icon-sm" onClick={onRemove}>
+            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div
       onDragEnter={onDragEnter}
@@ -178,7 +211,7 @@ function StepCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold">
-              Then {index + 1}: {NODE_META[node.type].label}
+              Then {index + 1}: {meta.label}
             </p>
             {hasError ? (
               <Badge variant="destructive">Needs config</Badge>
@@ -187,7 +220,7 @@ function StepCard({
             ) : null}
           </div>
           <p className="text-muted-foreground mt-1 text-xs">
-            {NODE_META[node.type].description}
+            {meta.description}
           </p>
           <p className="text-muted-foreground mt-1 truncate text-xs">
             {summary}
@@ -494,6 +527,9 @@ export function WorkflowEditor({ id }: { id: string }) {
 
   const editingNode =
     config?.kind === "node" ? nodes.find((n) => n.id === config.id) : null;
+  const triggerMeta = isTriggerType(trigger.type)
+    ? TRIGGER_META[trigger.type]
+    : null;
   const lastType = nodes.length ? nodes[nodes.length - 1]!.type : null;
   const configErrors = fieldErrors(validation.errors, config);
   const nextError = validation.errors[0];
@@ -570,6 +606,16 @@ export function WorkflowEditor({ id }: { id: string }) {
           </Alert>
         ) : null}
 
+        {!triggerMeta ? (
+          <Alert variant="destructive">
+            <AlertTitle>Workflow needs repair</AlertTitle>
+            <AlertDescription>
+              This workflow has an unknown trigger type: {trigger.type}. Choose
+              a supported trigger below before saving or enabling it.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {/* In-builder AI helper */}
         <Card className="rounded-md p-4">
           <button
@@ -629,7 +675,10 @@ export function WorkflowEditor({ id }: { id: string }) {
         <Card className="flex flex-col gap-4 rounded-md p-4">
           <div className="flex items-start gap-3">
             <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-md border">
-              <TriggerIcon type={trigger.type} className="text-primary" />
+              <TriggerIcon
+                type={triggerMeta ? trigger.type : "email"}
+                className="text-primary"
+              />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -639,10 +688,11 @@ export function WorkflowEditor({ id }: { id: string }) {
                 <Badge variant="outline">Trigger</Badge>
               </div>
               <p className="mt-1 text-base font-semibold">
-                {TRIGGER_META[trigger.type].label}
+                {triggerMeta?.label ?? "Unknown trigger"}
               </p>
               <p className="text-muted-foreground mt-1 text-sm">
-                {TRIGGER_META[trigger.type].description}
+                {triggerMeta?.description ??
+                  "Choose a supported trigger type to repair this workflow."}
               </p>
             </div>
           </div>
@@ -655,22 +705,26 @@ export function WorkflowEditor({ id }: { id: string }) {
                 : "never"}
             </span>
           </div>
-          <Select
-            value={trigger.type}
-            onValueChange={(v) => v && changeTriggerType(v)}
+          <NativeSelect
+            className="w-full"
+            value={triggerMeta ? trigger.type : ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (isTriggerType(value)) changeTriggerType(value);
+            }}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(TRIGGER_META) as TriggerType[]).map((t) => (
-                <SelectItem key={t} value={t}>
-                  {TRIGGER_META[t].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {TRIGGER_META[trigger.type].fields.length > 0 && (
+            {!triggerMeta ? (
+              <NativeSelectOption value="">
+                Choose a supported trigger…
+              </NativeSelectOption>
+            ) : null}
+            {(Object.keys(TRIGGER_META) as TriggerType[]).map((t) => (
+              <NativeSelectOption key={t} value={t}>
+                {TRIGGER_META[t].label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          {triggerMeta && triggerMeta.fields.length > 0 && (
             <Button
               variant={
                 issuesForTarget(validation.errors, { kind: "trigger" }).length
@@ -702,7 +756,7 @@ export function WorkflowEditor({ id }: { id: string }) {
                 (issue) => issue.nodeId === node.id,
               )}
               summary={summarize(node.config)}
-              hasFields={NODE_META[node.type].fields.length > 0}
+              hasFields={(NODE_META[node.type]?.fields.length ?? 0) > 0}
               onConfig={() => setConfig({ kind: "node", id: node.id })}
               onRemove={() => remove(node.id)}
               onDragStart={() => setDragIndex(i)}
@@ -733,14 +787,15 @@ export function WorkflowEditor({ id }: { id: string }) {
                 {config?.kind === "trigger"
                   ? "Trigger settings"
                   : editingNode
-                    ? NODE_META[editingNode.type].label
+                    ? (NODE_META[editingNode.type]?.label ??
+                      `Unknown step: ${editingNode.type}`)
                     : "Settings"}
               </SheetTitle>
             </SheetHeader>
             <div className="p-4">
               {config?.kind === "trigger" ? (
                 <ConfigForm
-                  fields={TRIGGER_META[trigger.type].fields}
+                  fields={triggerMeta?.fields ?? []}
                   values={trigger.config}
                   onChange={(k, v) =>
                     setTrigger((t) => ({
@@ -753,7 +808,7 @@ export function WorkflowEditor({ id }: { id: string }) {
                 />
               ) : editingNode ? (
                 <ConfigForm
-                  fields={NODE_META[editingNode.type].fields}
+                  fields={NODE_META[editingNode.type]?.fields ?? []}
                   values={editingNode.config}
                   onChange={(k, v) => setNodeConfig(editingNode.id, k, v)}
                   variables={VARIABLES}

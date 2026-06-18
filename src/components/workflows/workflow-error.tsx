@@ -23,9 +23,12 @@ export default function WorkflowError({
         <AlertTriangle className="size-5" />
       </div>
       <div>
-        <p className="text-lg font-semibold">Workflows could not load</p>
+        <p className="text-lg font-semibold">
+          Workflow editor failed to render
+        </p>
         <p className="text-muted-foreground mt-2 text-sm">
-          {error.message || "The workflow workspace hit an unexpected error."}
+          {error.message ||
+            "The workflow editor hit an unexpected client error."}
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">

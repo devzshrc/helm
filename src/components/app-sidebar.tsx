@@ -42,7 +42,7 @@ const navMain = [
     icon: <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} />,
   },
   {
-    title: "Workflows",
+    title: "Workflows (Beta)",
     url: "/dashboard/workflows",
     icon: <HugeiconsIcon icon={WorkflowSquare03Icon} strokeWidth={2} />,
   },
