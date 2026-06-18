@@ -15,6 +15,7 @@ import {
   isReconnectRequiredError,
   reconnectMessage,
 } from "~/lib/integration-health";
+import { timeDev } from "~/lib/perf";
 
 /**
  * A usable fallback draft when AI extraction fails or returns nothing — seeded
@@ -53,7 +54,9 @@ export const calendarRouter = createTRPCRouter({
     .input(z.object({ timeMin: z.string(), timeMax: z.string() }))
     .query(async ({ ctx, input }) => {
       try {
-        return await listEvents(ctx.session.user.id, input);
+        return await timeDev("calendar.list", () =>
+          listEvents(ctx.session.user.id, input),
+        );
       } catch (error) {
         if (isReconnectRequiredError(error)) {
           throw new TRPCError({

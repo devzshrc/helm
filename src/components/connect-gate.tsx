@@ -1,8 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import type { IntegrationHealth } from "~/lib/integration-health";
+import { api } from "~/trpc/react";
 import { BRAND, BRAND_TAGLINE } from "~/lib/brand";
 import { HelmMark } from "~/components/helm-mark";
 import { Button } from "~/components/ui/button";
@@ -100,6 +102,7 @@ function ConnectRow({
 }
 
 export function ConnectGate({ status }: { status: Status }) {
+  const utils = api.useUtils();
   const searchParams = useSearchParams();
   const connectedPlugin = searchParams.get("connected");
   const connectError = searchParams.get("connect") === "error";
@@ -122,6 +125,13 @@ export function ConnectGate({ status }: { status: Status }) {
     },
   };
   const allConnected = status.gmail && status.googlecalendar;
+
+  useEffect(() => {
+    if (allConnected || connectedPlugin) {
+      void utils.dashboard.summary.prefetch();
+      void utils.connections.status.invalidate();
+    }
+  }, [allConnected, connectedPlugin, utils]);
 
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6">

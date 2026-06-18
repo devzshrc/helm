@@ -5,6 +5,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { chatSessions } from "~/server/db/schema";
 import { WRITE_TOOLS, executeWriteAction } from "~/lib/ai/agent-tools";
 import { redactMessagesForStorage } from "~/lib/agent-redact";
+import { timeDev } from "~/lib/perf";
 
 /** First user message → a short session title. */
 function deriveTitle(messages: unknown): string | null {
@@ -26,7 +27,8 @@ export const agentRouter = createTRPCRouter({
   /* ---- chat session management (persists CopilotKit conversations) ---- */
   sessions: createTRPCRouter({
     list: protectedProcedure.query(({ ctx }) =>
-      ctx.db
+      timeDev("agent.sessions.list", () =>
+        ctx.db
         .select({
           id: chatSessions.id,
           title: chatSessions.title,
@@ -35,6 +37,7 @@ export const agentRouter = createTRPCRouter({
         .from(chatSessions)
         .where(eq(chatSessions.tenantId, ctx.session.user.id))
         .orderBy(desc(chatSessions.updatedAt)),
+      ),
     ),
 
     create: protectedProcedure.mutation(async ({ ctx }) => {
@@ -48,6 +51,7 @@ export const agentRouter = createTRPCRouter({
     load: protectedProcedure
       .input(z.object({ id: z.string() }))
       .query(async ({ ctx, input }) => {
+        return timeDev("agent.sessions.load", async () => {
         const [row] = await ctx.db
           .select({ messages: chatSessions.messages })
           .from(chatSessions)
@@ -59,6 +63,7 @@ export const agentRouter = createTRPCRouter({
           )
           .limit(1);
         return { messages: (row?.messages ?? []) as unknown[] };
+        });
       }),
 
     save: protectedProcedure

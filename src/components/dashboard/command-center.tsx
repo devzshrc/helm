@@ -25,6 +25,7 @@ import { api, type RouterOutputs } from "~/trpc/react";
 import { cn } from "~/lib/utils";
 import { useRealtime } from "~/hooks/use-realtime";
 import { useSyncCursor } from "~/hooks/use-sync-cursor";
+import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import { InboxWorkspaceBoundary } from "~/components/inbox/inbox-workspace-boundary";
 import { HelmMark } from "~/components/helm-mark";
 import { Button } from "~/components/ui/button";
@@ -371,9 +372,11 @@ export function CommandCenter() {
   );
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
+  const debouncedSubmitted = useDebouncedValue(submitted, 250);
   const summary = api.dashboard.summary.useQuery(undefined, {
     refetchOnWindowFocus: true,
     staleTime: 30_000,
+    placeholderData: (previous) => previous,
   });
   // Scheduling proposals the concierge is holding for approval — surfaced on
   // the dashboard so an inbound interview/meeting email shows up here too.
@@ -382,8 +385,11 @@ export function CommandCenter() {
     staleTime: 30_000,
   });
   const search = api.search.unified.useQuery(
-    { query: submitted, limit: 8 },
-    { enabled: submitted.length > 0 },
+    { query: debouncedSubmitted, limit: 8 },
+    {
+      enabled: debouncedSubmitted.length > 0,
+      placeholderData: (previous) => previous,
+    },
   );
 
   // Keep the dashboard live: invalidate on the change cursor advancing (the

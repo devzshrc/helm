@@ -134,7 +134,11 @@ export function CalendarView() {
       timeMax: range.end.toISOString(),
     },
     // No interval polling — refreshed via the webhook change cursor + focus.
-    { staleTime: 30_000, refetchOnWindowFocus: true },
+    {
+      staleTime: 60_000,
+      refetchOnWindowFocus: true,
+      placeholderData: (previous) => previous,
+    },
   );
   const del = api.calendar.delete.useMutation();
   const parse = api.calendar.parse.useMutation();

@@ -22,7 +22,7 @@ const sharedGuardrails = [
   "3. ANSWER ONCE. Produce exactly one response per turn. Call show_router_trace at most once and render_surface at most once per turn — once render_surface has run, your turn is done: emit no further tool calls, just an optional short closing line. If a tool card already shows the data (email list, calendar, etc.), add at most ONE short closing line. Never restate the same content as both prose and a render_surface, and never call render_surface or show_router_trace again after either has already run this turn — duplicates are not allowed.",
   "4. WRITES ARE COMPOSER-FIRST AND APPROVAL-GATED. For send/compose email, create/update/delete event, or create/edit workflow: immediately call the matching client tool (send_email, create_event, update_event, delete_event, create_workflow) with known fields prefilled and empty strings / [] for unknowns. The composer UI is the entire response — no prose before or after. Never claim a write succeeded until the approved tool result returns.",
   "5. IDs come only from prior tool results. If an action needs an id you don't have, call the read tool first (search_email, list_events, list_workflows).",
-  "6. GENERATIVE UI for results. Read results render through their own tool cards. For a status/choice/result with no domain card, call render_surface: `summary` is ONE short sentence (≤140 chars), and every itemized detail goes in `data` as label/value rows — never headings or bullet lists in summary. Plain prose only for tiny confirmations or out-of-scope replies.",
+  "6. GENERATIVE UI for results. Prefer structured cards/forms over markdown for actionable data, approvals, search results, workflows, events, drafts, choices, and errors. Read results render through their own tool cards. For a status/choice/result with no domain card, call render_surface: `summary` is ONE short sentence (≤140 chars), and every itemized detail goes in `data` as label/value rows — never headings or bullet lists in summary. Use markdown only for prose explanations, document artifacts, or fallback summaries.",
   "7. ROUTING SIGNAL. For a non-trivial request, call show_router_trace once at the start with your inferred intent — EXCEPT the compose/create exceptions in rule 4, where you go straight to the composer. The trace is a status indicator, not the answer.",
   "8. COLLECT MISSING FIELDS IN THE COMPOSER, never via prose, markdown, render_surface, or ask_options. If a tool returns an error field, explain it plainly and offer a retry.",
   "",
@@ -186,7 +186,7 @@ export function createHelmAgents() {
       "Workflow compose exception: immediately call create_workflow with known fields/defaults. The workflow composer UI is the only response.",
       "If confidence is low or required fields are missing, call render_surface with 2-5 action buttons instead of guessing. Do not call ask_options.",
       "For writes, call the client tool directly so the UI can render approval. Never ask for confirmation in plain text when an approval tool exists.",
-      "After completing a task, call render_surface for the final result or next actions unless a purpose-built domain card already fully shows the result.",
+      "After completing a task, call render_surface for the final result or next actions unless a purpose-built domain card already fully shows the result. Avoid markdown when a structured UI card or editable composer can represent the answer.",
     ].join("\n"),
   });
 

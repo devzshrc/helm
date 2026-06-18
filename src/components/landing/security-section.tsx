@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { KeyRound, Lock, ShieldCheck, UserCheck } from "lucide-react";
 
 const POINTS = [
@@ -34,24 +33,16 @@ export function SecuritySection() {
     <section className="py-16 md:py-28">
       <div className="mx-auto max-w-5xl px-6">
         <div className="mx-auto mb-10 flex max-w-2xl flex-col items-center text-center">
-          <h2 className="font-serif text-3xl tracking-tight md:text-4xl">
-            Do we steal your data?
-          </h2>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            You must be thinking…
+          <p className="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">
+            Security and privacy
           </p>
-          <div className="mt-6 overflow-hidden rounded-2xl border shadow-sm">
-            <Image
-              src="https://i.imgflip.com/4hsmz3.jpg"
-              alt="You must be thinking: do they steal my data?"
-              width={420}
-              height={420}
-              unoptimized
-              className="block"
-            />
-          </div>
-          <p className="text-muted-foreground mt-6 text-sm md:text-base">
-            Nope. Here&apos;s exactly how your data stays yours.
+          <h2 className="mt-3 font-serif text-3xl tracking-tight md:text-4xl">
+            Your workspace stays under your control.
+          </h2>
+          <p className="text-muted-foreground mt-4 text-sm leading-6 md:text-base">
+            Helm connects through Google OAuth, keeps sensitive credentials
+            encrypted, and asks before any action that sends, edits, deletes, or
+            changes calendar state.
           </p>
         </div>
 

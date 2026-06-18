@@ -100,7 +100,7 @@ export const generativeSurfaceSchema = z.object({
   summary: z
     .string()
     .describe(
-      "ONE short sentence (max ~140 chars). Never a full report. Never raw markdown headers or bullet lists. Put every itemized detail in `data`, not here.",
+      "ONE short sentence (max ~140 chars). Never a full report. Never raw markdown headers or bullet lists. Put every itemized detail in `data`, not here. Prefer structured fields/actions over markdown.",
     ),
   data: z
     .array(

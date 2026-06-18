@@ -79,7 +79,10 @@ type WfLike = {
 export function WorkflowsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const list = api.workflows.list.useQuery();
+  const list = api.workflows.list.useQuery(undefined, {
+    staleTime: 2 * 60_000,
+    placeholderData: (previous) => previous,
+  });
   const [filter, setFilter] = useState<Filter>("all");
   const promptForwardedRef = useRef(false);
 

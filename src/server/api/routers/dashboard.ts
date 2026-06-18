@@ -2,6 +2,7 @@ import { addDays, endOfDay, startOfDay } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { timeDev } from "~/lib/perf";
 import { listEvents } from "~/server/calendar";
 import { listInboxCached, listThreads } from "~/server/gmail";
 import { workflowRuns, workflows } from "~/server/db/schema";
@@ -21,7 +22,8 @@ function looksCanArchive(text: string) {
 }
 
 export const dashboardRouter = createTRPCRouter({
-  summary: protectedProcedure.query(async ({ ctx }) => {
+  summary: protectedProcedure.query(async ({ ctx }) =>
+    timeDev("dashboard.summary", async () => {
     const tenantId = ctx.session.user.id;
     const now = new Date();
     const [threadsResult, eventsResult, wfRows, recentRuns] = await Promise.all([
@@ -164,5 +166,6 @@ export const dashboardRouter = createTRPCRouter({
         },
       ],
     };
-  }),
+    }),
+  ),
 });

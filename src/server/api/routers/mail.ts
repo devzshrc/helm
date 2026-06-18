@@ -24,6 +24,7 @@ import {
   isReconnectRequiredError,
   reconnectMessage,
 } from "~/lib/integration-health";
+import { timeDev } from "~/lib/perf";
 import {
   backfillMissingEmbeddings,
   ensureTriaged,
@@ -144,6 +145,7 @@ export const mailRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
+      return await timeDev("mail.list", async () => {
       const tenantId = ctx.session.user.id;
       const limit = input?.limit ?? 25;
       if (input?.mode === "semantic" && input.q?.trim()) {
@@ -202,6 +204,7 @@ export const mailRouter = createTRPCRouter({
         ...t,
         priority: priorities.get(t.id) ?? null,
       }));
+      });
       } catch (error) {
         mailError(error);
       }
@@ -211,7 +214,9 @@ export const mailRouter = createTRPCRouter({
     .input(z.object({ threadId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        return await getThread(ctx.session.user.id, input.threadId);
+        return await timeDev("mail.thread", () =>
+          getThread(ctx.session.user.id, input.threadId),
+        );
       } catch (error) {
         mailError(error);
       }

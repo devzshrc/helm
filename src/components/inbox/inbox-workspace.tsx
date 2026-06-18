@@ -65,6 +65,7 @@ import { ShortcutsHelp } from "~/components/shortcuts-help";
 import { useShortcuts } from "~/hooks/use-shortcuts";
 import { useRealtime } from "~/hooks/use-realtime";
 import { useSyncCursor } from "~/hooks/use-sync-cursor";
+import { useDebouncedValue } from "~/hooks/use-debounced-value";
 import type { ThreadRow } from "~/server/gmail";
 
 const CAL_RE =
@@ -131,6 +132,7 @@ export function InboxWorkspace({
   // Growing window → "load more" without breaking the optimistic cache helpers.
   const [limit, setLimit] = useState(25);
   const [serverSearch, setServerSearch] = useState("");
+  const debouncedServerSearch = useDebouncedValue(serverSearch, 300);
   const [searchMode, setSearchMode] = useState<SearchMode>("filter");
   const [mailbox, setMailbox] = useState<MailboxMode>("inbox");
   const serverMode =
@@ -139,7 +141,8 @@ export function InboxWorkspace({
       : mailbox === "sent"
         ? "gmail"
         : searchMode;
-  const activeServerSearch = searchMode === "filter" ? "" : serverSearch;
+  const activeServerSearch =
+    searchMode === "filter" ? "" : debouncedServerSearch;
   const threadsQuery = api.mail.list.useQuery(
     {
       q: activeServerSearch || undefined,

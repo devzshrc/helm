@@ -82,7 +82,10 @@ function prefList(value: unknown): string {
 
 export function PreferencesSection() {
   const utils = api.useUtils();
-  const { data: prefs } = api.preferences.get.useQuery();
+  const { data: prefs } = api.preferences.get.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
+  });
   const setTimezone = api.preferences.setTimezone.useMutation();
   const setFocusThreshold = api.preferences.setFocusThreshold.useMutation();
   const setTriagePrefs = api.preferences.setTriagePrefs.useMutation();

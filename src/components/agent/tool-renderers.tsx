@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -65,6 +63,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
+import { PremiumMarkdown } from "~/components/ui/premium-markdown";
 import {
   reportActivity,
   type ActivityStatus,
@@ -1208,11 +1207,7 @@ function ShowMarkdownCard({
   }
   return (
     <ToolCard icon={Sparkles} label={label} status="complete">
-      <div className="prose prose-sm dark:prose-invert prose-headings:font-semibold prose-p:leading-relaxed max-w-none">
-        <Markdown remarkPlugins={[remarkGfm]}>
-          {parameters.markdown ?? ""}
-        </Markdown>
-      </div>
+      <PremiumMarkdown>{parameters.markdown ?? ""}</PremiumMarkdown>
     </ToolCard>
   );
 }
@@ -2298,9 +2293,9 @@ function GenerativeSurfaceCard({
               ) : null}
             </div>
             {summary ? (
-              <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-ul:my-1.5 max-w-none">
-                <Markdown remarkPlugins={[remarkGfm]}>{summary}</Markdown>
-              </div>
+              <PremiumMarkdown className="prose-p:my-1 prose-p:leading-6">
+                {summary}
+              </PremiumMarkdown>
             ) : null}
           </div>
 
@@ -2434,9 +2429,7 @@ function DocumentArtifact({
         </button>
       </div>
       <div className="max-h-[28rem] overflow-y-auto px-5 py-4">
-        <article className="prose prose-sm dark:prose-invert prose-headings:font-semibold prose-p:leading-relaxed max-w-none">
-          <Markdown remarkPlugins={[remarkGfm]}>{body}</Markdown>
-        </article>
+        <PremiumMarkdown>{body}</PremiumMarkdown>
       </div>
     </div>
   );

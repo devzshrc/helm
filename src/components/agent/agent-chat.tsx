@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import {
   Check,
@@ -37,6 +35,8 @@ import { ReasoningView } from "~/components/agent/reasoning-view";
 import { AgentActivityStrip } from "~/components/agent/agent-activity-strip";
 import { clearActivity } from "~/lib/agent-activity";
 import { cn } from "~/lib/utils";
+import { PremiumMarkdown } from "~/components/ui/premium-markdown";
+import { useDebouncedValue } from "~/hooks/use-debounced-value";
 
 /** No-op slot to suppress CopilotChatView's built-in composer. */
 const renderNothing = () => null;
@@ -83,9 +83,7 @@ function StrictAssistantMessage(props: {
   // lossy "first line + 3 boxes" card, which mangled real answers.)
   return (
     <div className="mx-auto w-full max-w-3xl px-3 py-2">
-      <div className="prose prose-sm dark:prose-invert prose-headings:font-semibold prose-headings:mt-3 prose-p:leading-relaxed prose-pre:bg-muted/60 prose-ul:my-2 max-w-none">
-        <Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
-      </div>
+      <PremiumMarkdown>{text}</PremiumMarkdown>
     </div>
   );
 }
@@ -103,6 +101,8 @@ export function AgentChat() {
   const { data: session, isPending: authPending } = authClient.useSession();
   const sessionsQ = api.agent.sessions.list.useQuery(undefined, {
     enabled: !!session && !authPending,
+    staleTime: 2 * 60_000,
+    placeholderData: (previous) => previous,
   });
   const createSession = api.agent.sessions.create.useMutation();
   const removeSession = api.agent.sessions.remove.useMutation();
@@ -352,6 +352,7 @@ export function AgentChat() {
           loading={sessionsQ.isLoading || authPending}
           error={sessionsQ.error?.message}
           onRetry={() => void sessionsQ.refetch()}
+          onPrefetch={(id) => void utils.agent.sessions.load.prefetch({ id })}
           onSelect={selectChat}
           onNew={newChat}
           onDelete={deleteChat}
@@ -484,6 +485,7 @@ function ChatHistoryRail({
   loading,
   error,
   onRetry,
+  onPrefetch,
   onSelect,
   onNew,
   onDelete,
@@ -496,6 +498,7 @@ function ChatHistoryRail({
   loading: boolean;
   error?: string;
   onRetry: () => void;
+  onPrefetch: (id: string) => void;
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
@@ -504,12 +507,13 @@ function ChatHistoryRail({
   onMobileOpenChange: (open: boolean) => void;
 }) {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 180);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const visible = sessions.filter((session) =>
     (session.title ?? "New chat")
       .toLowerCase()
-      .includes(query.trim().toLowerCase()),
+      .includes(debouncedQuery.trim().toLowerCase()),
   );
 
   function startRename(session: ChatSession) {
@@ -614,9 +618,11 @@ function ChatHistoryRail({
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2">
                       <button
                         type="button"
+                        onMouseEnter={() => onPrefetch(session.id)}
+                        onFocus={() => onPrefetch(session.id)}
                         onClick={() => onSelect(session.id)}
                         className="min-w-0 flex-1 text-left"
                       >
