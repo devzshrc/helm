@@ -55,79 +55,35 @@ function mapEvent(e: RawEvent): CalEvent {
 // birthday!" ghost) or miss freshly-created ones.
 const CACHE_TTL_MS = 90_000;
 
-export async function listEvents(
+function cachedEvents(rows: (typeof calendarEvents.$inferSelect)[]): CalEvent[] {
+  return rows.map((r) => ({
+    id: r.eventId,
+    summary: r.title,
+    start: r.start,
+    end: r.end,
+    allDay: r.allDay,
+    location: r.location ?? undefined,
+    description: r.description ?? undefined,
+    attendees: (r.attendees as CalEvent["attendees"]) ?? [],
+    htmlLink: r.htmlLink ?? undefined,
+  }));
+}
+
+async function refreshEventWindow(
   tenantId: string,
   opts: { timeMin: string; timeMax: string },
-): Promise<CalEvent[]> {
-  // Try DB cache first (cal_events_tenant_start_idx covers this query)
-  const cached = await db
-    .select()
-    .from(calendarEvents)
-    .where(
-      and(
-        eq(calendarEvents.tenantId, tenantId),
-        gte(calendarEvents.start, opts.timeMin),
-        lte(calendarEvents.start, opts.timeMax),
-      ),
-    );
+) {
+  const res = (await withCorsair((c) =>
+    client(c, tenantId).events.getMany({
+      timeMin: opts.timeMin,
+      timeMax: opts.timeMax,
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 100,
+    }),
+  )) as { items?: RawEvent[] };
+  const events = (res.items ?? []).map(mapEvent).filter((e) => e.id);
 
-  // Use the cache only if it's fresh. The previous code trusted ANY cached rows
-  // forever (and never deleted events that vanished from Google), so a stale
-  // window kept returning deleted events indefinitely.
-  const fresh =
-    cached.length > 0 &&
-    cached.every(
-      (r) => Date.now() - new Date(r.updatedAt).getTime() < CACHE_TTL_MS,
-    );
-  if (fresh) {
-    return cached.map((r) => ({
-      id: r.eventId,
-      summary: r.title,
-      start: r.start,
-      end: r.end,
-      allDay: r.allDay,
-      location: r.location ?? undefined,
-      description: r.description ?? undefined,
-      attendees: (r.attendees as CalEvent["attendees"]) ?? [],
-      htmlLink: r.htmlLink ?? undefined,
-    }));
-  }
-
-  // Stale or empty → live fetch. Fall back to whatever was cached if the live
-  // call fails, so a transient Google/Corsair error doesn't blank the calendar.
-  let events: CalEvent[];
-  try {
-    const res = (await withCorsair((c) =>
-      client(c, tenantId).events.getMany({
-        timeMin: opts.timeMin,
-        timeMax: opts.timeMax,
-        singleEvents: true,
-        orderBy: "startTime",
-        maxResults: 100,
-      }),
-    )) as { items?: RawEvent[] };
-    events = (res.items ?? []).map(mapEvent).filter((e) => e.id);
-  } catch (err) {
-    if (cached.length > 0) {
-      return cached.map((r) => ({
-        id: r.eventId,
-        summary: r.title,
-        start: r.start,
-        end: r.end,
-        allDay: r.allDay,
-        location: r.location ?? undefined,
-        description: r.description ?? undefined,
-        attendees: (r.attendees as CalEvent["attendees"]) ?? [],
-        htmlLink: r.htmlLink ?? undefined,
-      }));
-    }
-    throw err;
-  }
-
-  // Replace the whole window: delete the cached rows for this time range, then
-  // reseed from the live result. This prunes events that no longer exist in
-  // Google (the root cause of the phantom "Happy birthday!" all-day event).
-  // The neon-http driver has no transaction support, so run these sequentially.
   await db
     .delete(calendarEvents)
     .where(
@@ -172,6 +128,52 @@ export async function listEvents(
   }
 
   return events;
+}
+
+export async function listEvents(
+  tenantId: string,
+  opts: { timeMin: string; timeMax: string },
+): Promise<CalEvent[]> {
+  // Try DB cache first (cal_events_tenant_start_idx covers this query)
+  const cached = await db
+    .select()
+    .from(calendarEvents)
+    .where(
+      and(
+        eq(calendarEvents.tenantId, tenantId),
+        gte(calendarEvents.start, opts.timeMin),
+        lte(calendarEvents.start, opts.timeMax),
+      ),
+    );
+
+  // Use the cache only if it's fresh. The previous code trusted ANY cached rows
+  // forever (and never deleted events that vanished from Google), so a stale
+  // window kept returning deleted events indefinitely.
+  const fresh =
+    cached.length > 0 &&
+    cached.every(
+      (r) => Date.now() - new Date(r.updatedAt).getTime() < CACHE_TTL_MS,
+    );
+  if (cached.length > 0) {
+    if (!fresh) {
+      void refreshEventWindow(tenantId, opts).catch(() => {
+        // The visible request already has usable cached data; the next explicit
+        // refresh/focus will surface persistent errors.
+      });
+    }
+    return cachedEvents(cached);
+  }
+
+  // Stale or empty → live fetch. Fall back to whatever was cached if the live
+  // call fails, so a transient Google/Corsair error doesn't blank the calendar.
+  try {
+    return await refreshEventWindow(tenantId, opts);
+  } catch (err) {
+    if (cached.length > 0) {
+      return cachedEvents(cached);
+    }
+    throw err;
+  }
 }
 
 export type EventDraft = {

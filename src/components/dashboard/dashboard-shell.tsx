@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AppSidebar } from "~/components/app-sidebar";
 import { CommandPalette } from "~/components/command-palette";
 import { ConnectGate } from "~/components/connect-gate";
+import { HelmMark } from "~/components/helm-mark";
 import { PageTransition } from "~/components/page-transition";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { authClient } from "~/server/better-auth/client";
@@ -36,22 +37,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [router, statusError]);
 
   if (sessionPending || (session && statusPending)) {
-    return <div className="bg-background min-h-svh" />;
+    return (
+      <DashboardLoading
+        label={
+          sessionPending ? "Checking your session" : "Checking Gmail and Calendar"
+        }
+      />
+    );
   }
 
   if (!session?.user) {
-    return <div className="bg-background min-h-svh" />;
+    return <DashboardLoading label="Redirecting to sign in" />;
+  }
+
+  if (!status) {
+    return <DashboardLoading label="Checking Gmail and Calendar" />;
   }
 
   if (!status?.gmail || !status?.googlecalendar) {
-    return (
-      <ConnectGate
-        status={{
-          gmail: Boolean(status?.gmail),
-          googlecalendar: Boolean(status?.googlecalendar),
-        }}
-      />
-    );
+    return <ConnectGate status={status} />;
   }
 
   const user = {
@@ -76,5 +80,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </SidebarInset>
       <CommandPalette />
     </SidebarProvider>
+  );
+}
+
+function DashboardLoading({ label }: { label: string }) {
+  return (
+    <div className="bg-background flex min-h-svh items-center justify-center p-6">
+      <div className="flex w-full max-w-sm flex-col items-center gap-5 text-center">
+        <HelmMark className="size-12" />
+        <div>
+          <p className="text-sm font-semibold">{label}</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Preparing your workspace.
+          </p>
+        </div>
+        <div className="w-full space-y-2">
+          <div className="bg-muted h-3 animate-pulse rounded-full" />
+          <div className="bg-muted/70 mx-auto h-3 w-4/5 animate-pulse rounded-full" />
+          <div className="bg-muted/50 mx-auto h-3 w-2/3 animate-pulse rounded-full" />
+        </div>
+      </div>
+    </div>
   );
 }

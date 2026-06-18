@@ -24,14 +24,27 @@ export const dashboardRouter = createTRPCRouter({
   summary: protectedProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.session.user.id;
     const now = new Date();
-    const [threads, events, wfRows, recentRuns] = await Promise.all([
-      (async () =>
-        (await listInboxCached(tenantId, 40)) ??
-        (await listThreads(tenantId, { maxResults: 40 })))(),
-      listEvents(tenantId, {
+    const [threadsResult, eventsResult, wfRows, recentRuns] = await Promise.all([
+      (async () => {
+        try {
+          return (
+            (await listInboxCached(tenantId, 40)) ??
+            (await listThreads(tenantId, { maxResults: 40 }))
+          );
+        } catch {
+          return [];
+        }
+      })(),
+      (async () => {
+        try {
+          return await listEvents(tenantId, {
         timeMin: startOfDay(now).toISOString(),
         timeMax: addDays(endOfDay(now), 7).toISOString(),
-      }),
+          });
+        } catch {
+          return [];
+        }
+      })(),
       ctx.db
         .select()
         .from(workflows)
@@ -45,6 +58,8 @@ export const dashboardRouter = createTRPCRouter({
         .orderBy(desc(workflowRuns.startedAt))
         .limit(20),
     ]);
+    const threads = threadsResult;
+    const events = eventsResult;
 
     const priorityEmails = threads
       .filter((thread) =>

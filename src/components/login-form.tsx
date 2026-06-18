@@ -13,7 +13,7 @@ export function LoginForm() {
     setLoading(true);
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard/agent",
+      callbackURL: "/dashboard",
     });
     setLoading(false);
   }

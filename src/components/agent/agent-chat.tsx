@@ -3,9 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
+import {
+  Check,
+  Menu,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import { fadeUp, listItem, staggerContainer, tapScale } from "~/lib/motion";
 
@@ -22,11 +32,11 @@ import { api } from "~/trpc/react";
 import { authClient } from "~/server/better-auth/client";
 import { ToolRenderers } from "~/components/agent/tool-renderers";
 import { AgentComposer } from "~/components/agent/agent-composer";
-import { ChatMenu } from "~/components/agent/chat-menu";
 import { HelmMark } from "~/components/helm-mark";
 import { ReasoningView } from "~/components/agent/reasoning-view";
 import { AgentActivityStrip } from "~/components/agent/agent-activity-strip";
 import { clearActivity } from "~/lib/agent-activity";
+import { cn } from "~/lib/utils";
 
 /** No-op slot to suppress CopilotChatView's built-in composer. */
 const renderNothing = () => null;
@@ -114,6 +124,8 @@ export function AgentChat() {
   const creatingRef = useRef(false);
   const lastUserTextRef = useRef("");
   const [runError, setRunError] = useState<string | null>(null);
+  const [activeLoading, setActiveLoading] = useState(false);
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const promptConsumedRef = useRef("");
 
   // Pick / create an initial session once the list resolves.
@@ -147,6 +159,7 @@ export function AgentChat() {
     if (!activeId) return;
     let cancelled = false;
     hydratingRef.current = true;
+    setActiveLoading(true);
     agent.threadId = activeId; // scope runs to this conversation
     void utils.agent.sessions.load
       .fetch({ id: activeId })
@@ -163,6 +176,7 @@ export function AgentChat() {
         // Release on the next tick so the resulting render doesn't auto-save.
         setTimeout(() => {
           if (!cancelled) hydratingRef.current = false;
+          if (!cancelled) setActiveLoading(false);
         }, 0);
       });
     return () => {
@@ -253,6 +267,7 @@ export function AgentChat() {
     }
     setRunError(null);
     setActiveId(id);
+    setMobileHistoryOpen(false);
   }
 
   function newChat() {
@@ -328,38 +343,42 @@ export function AgentChat() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <ToolRenderers />
 
-        {/* Slim toolbar: chat history lives here, not a second sidebar. */}
-        <div className="flex items-center gap-2 px-3 py-1.5">
-          <ChatMenu
-            sessions={sessionsQ.data ?? []}
-            activeId={activeId}
-            onSelect={selectChat}
-            onNew={newChat}
-            onDelete={deleteChat}
-            onRename={renameChat}
-          />
-        </div>
-        {sessionsQ.error ? (
-          <div className="mx-3 mb-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            <div className="flex items-center justify-between gap-3">
-              <span>Chat history could not load.</span>
-              <button
-                type="button"
-                onClick={() => void sessionsQ.refetch()}
-                className="rounded-md border px-2 py-1 text-xs"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        ) : null}
+        <ChatHistoryRail
+          sessions={sessionsQ.data ?? []}
+          activeId={activeId}
+          loading={sessionsQ.isLoading || authPending}
+          error={sessionsQ.error?.message}
+          onRetry={() => void sessionsQ.refetch()}
+          onSelect={selectChat}
+          onNew={newChat}
+          onDelete={deleteChat}
+          onRename={renameChat}
+          mobileOpen={mobileHistoryOpen}
+          onMobileOpenChange={setMobileHistoryOpen}
+        />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileHistoryOpen(true)}
+              className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-lg"
+              aria-label="Open chats"
+            >
+              <Menu className="size-4" />
+            </button>
+            <p className="truncate text-sm font-semibold">
+              {(sessionsQ.data ?? []).find((s) => s.id === activeId)?.title ??
+                "New chat"}
+            </p>
+          </div>
           <div className="relative min-h-0 flex-1 overflow-hidden">
-            {isEmpty ? (
+            {activeLoading ? (
+              <ActiveChatSkeleton />
+            ) : isEmpty ? (
               <EmptyState
                 onPick={submit}
                 name={session?.user?.name}
@@ -439,11 +458,251 @@ export function AgentChat() {
           <AgentComposer
             onSubmit={submit}
             onStop={() => agent.abortRun()}
-            disabled={agent.isRunning || !activeId}
+            disabled={
+              agent.isRunning ||
+              !activeId ||
+              authPending ||
+              sessionsQ.isLoading ||
+              activeLoading
+            }
           />
         </div>
       </div>
     </MotionConfig>
+  );
+}
+
+type ChatSession = {
+  id: string;
+  title: string | null;
+  updatedAt: Date | string;
+};
+
+function ChatHistoryRail({
+  sessions,
+  activeId,
+  loading,
+  error,
+  onRetry,
+  onSelect,
+  onNew,
+  onDelete,
+  onRename,
+  mobileOpen,
+  onMobileOpenChange,
+}: {
+  sessions: ChatSession[];
+  activeId: string | null;
+  loading: boolean;
+  error?: string;
+  onRetry: () => void;
+  onSelect: (id: string) => void;
+  onNew: () => void;
+  onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
+  mobileOpen: boolean;
+  onMobileOpenChange: (open: boolean) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const visible = sessions.filter((session) =>
+    (session.title ?? "New chat")
+      .toLowerCase()
+      .includes(query.trim().toLowerCase()),
+  );
+
+  function startRename(session: ChatSession) {
+    setEditingId(session.id);
+    setDraft(session.title ?? "");
+  }
+
+  function commitRename() {
+    if (editingId && draft.trim()) onRename(editingId, draft.trim());
+    setEditingId(null);
+  }
+
+  const renderBody = () => (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex items-center justify-between gap-2 p-3">
+        <div>
+          <p className="text-sm font-semibold">Chats</p>
+          <p className="text-muted-foreground text-xs">Your Helm history</p>
+        </div>
+        <button
+          type="button"
+          onClick={onNew}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 grid size-8 place-items-center rounded-lg transition-colors"
+          aria-label="New chat"
+        >
+          <Plus className="size-4" />
+        </button>
+      </div>
+
+      <div className="px-3 pb-2">
+        <div className="bg-background flex h-9 items-center gap-2 rounded-lg border px-2">
+          <Search className="text-muted-foreground size-4" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search chats"
+            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none"
+          />
+        </div>
+      </div>
+
+      {error ? (
+        <div className="mx-3 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <p>Chat history could not load.</p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-2 rounded-md border px-2 py-1 font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+        {loading ? (
+          <div className="space-y-2 p-1">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-muted h-11 animate-pulse rounded-lg"
+              />
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
+          <p className="text-muted-foreground px-3 py-8 text-center text-xs">
+            {sessions.length === 0 ? "No chats yet." : "No matching chats."}
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {visible.map((session) => {
+              const active = session.id === activeId;
+              const editing = session.id === editingId;
+              return (
+                <div
+                  key={session.id}
+                  className={cn(
+                    "group rounded-lg px-2 py-2 transition-colors",
+                    active ? "bg-accent" : "hover:bg-accent/60",
+                  )}
+                >
+                  {editing ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") commitRename();
+                          if (event.key === "Escape") setEditingId(null);
+                        }}
+                        className="bg-background min-w-0 flex-1 rounded-md border px-2 py-1 text-sm outline-none"
+                        autoFocus
+                      />
+                      <button type="button" onClick={commitRename}>
+                        <Check className="text-muted-foreground size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                      >
+                        <X className="text-muted-foreground size-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onSelect(session.id)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <span className="block truncate text-sm font-medium">
+                          {session.title ?? "New chat"}
+                        </span>
+                        <span className="text-muted-foreground mt-0.5 block text-[11px]">
+                          {formatDistanceToNow(new Date(session.updatedAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </button>
+                      <div className="flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => startRename(session)}
+                          className="text-muted-foreground hover:text-foreground grid size-6 place-items-center rounded"
+                          aria-label="Rename chat"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(session.id)}
+                          className="text-muted-foreground hover:text-destructive grid size-6 place-items-center rounded"
+                          aria-label="Delete chat"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <aside className="hidden w-72 shrink-0 border-r bg-muted/20 md:block">
+        {renderBody()}
+      </aside>
+      <AnimatePresence>
+        {mobileOpen ? (
+          <motion.div
+            className="fixed inset-0 z-50 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => onMobileOpenChange(false)}
+              aria-label="Close chats"
+            />
+            <motion.aside
+              className="bg-background absolute inset-y-0 left-0 w-80 max-w-[85vw] border-r shadow-xl"
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {renderBody()}
+            </motion.aside>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function ActiveChatSkeleton() {
+  return (
+    <div className="mx-auto flex h-full w-full max-w-3xl flex-col justify-end gap-5 px-4 py-8">
+      <div className="bg-muted ml-auto h-10 w-2/3 animate-pulse rounded-2xl" />
+      <div className="space-y-3">
+        <div className="bg-muted h-4 w-40 animate-pulse rounded" />
+        <div className="bg-muted h-4 w-full animate-pulse rounded" />
+        <div className="bg-muted h-4 w-4/5 animate-pulse rounded" />
+      </div>
+    </div>
   );
 }
 

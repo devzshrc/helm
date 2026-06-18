@@ -53,6 +53,38 @@ In Google Cloud Console → Credentials → the OAuth Web client, add:
 
 (Keep the localhost entries for local dev.)
 
+## 2.1 Corsair Gmail + Calendar setup
+
+Corsair credentials must live in env/Corsair secure config, never in source.
+Verify plugin operations before deploy:
+
+```sh
+bunx corsair list -p gmail
+bunx corsair list -p googlecalendar
+```
+
+Configure the Google OAuth app credentials for each plugin with secret values
+from the deployment environment:
+
+```sh
+bunx corsair setup -p gmail clientId="<google-client-id>" clientSecret="<google-client-secret>"
+bunx corsair setup -p googlecalendar clientId="<google-client-id>" clientSecret="<google-client-secret>"
+```
+
+Users should connect through Helm's OAuth routes:
+
+```text
+/api/corsair/connect?plugin=gmail
+/api/corsair/connect?plugin=googlecalendar
+```
+
+For diagnostics only, inspect a tenant/plugin with:
+
+```sh
+bunx corsair auth -p gmail -t "<tenant-id>" -C
+bunx corsair auth -p googlecalendar -t "<tenant-id>" -C
+```
+
 ## 3. Domain + DNS
 
 Add `helm.devzshrc.in` under Vercel → Project → Settings → Domains, then point

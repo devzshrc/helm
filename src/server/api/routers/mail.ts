@@ -1,4 +1,5 @@
 import { generateText } from "ai";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -19,6 +20,10 @@ import {
 } from "~/server/gmail";
 import { models } from "~/lib/ai/models";
 import { draftReply } from "~/lib/ai/draft";
+import {
+  isReconnectRequiredError,
+  reconnectMessage,
+} from "~/lib/integration-health";
 import {
   backfillMissingEmbeddings,
   ensureTriaged,
@@ -111,6 +116,17 @@ async function inboxThreads(tenantId: string, limit: number) {
   );
 }
 
+function mailError(error: unknown): never {
+  if (isReconnectRequiredError(error)) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: reconnectMessage("gmail"),
+      cause: error,
+    });
+  }
+  throw error;
+}
+
 export const mailRouter = createTRPCRouter({
   list: protectedProcedure
     .input(
@@ -127,6 +143,7 @@ export const mailRouter = createTRPCRouter({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
+      try {
       const tenantId = ctx.session.user.id;
       const limit = input?.limit ?? 25;
       if (input?.mode === "semantic" && input.q?.trim()) {
@@ -185,11 +202,20 @@ export const mailRouter = createTRPCRouter({
         ...t,
         priority: priorities.get(t.id) ?? null,
       }));
+      } catch (error) {
+        mailError(error);
+      }
     }),
 
   thread: protectedProcedure
     .input(z.object({ threadId: z.string().min(1) }))
-    .query(({ ctx, input }) => getThread(ctx.session.user.id, input.threadId)),
+    .query(async ({ ctx, input }) => {
+      try {
+        return await getThread(ctx.session.user.id, input.threadId);
+      } catch (error) {
+        mailError(error);
+      }
+    }),
 
   send: protectedProcedure
     .input(

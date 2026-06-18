@@ -1,9 +1,11 @@
 import { type Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { LoginForm } from "~/components/login-form";
 import { HelmMark } from "~/components/helm-mark";
 import { BRAND } from "~/lib/brand";
+import { getSession } from "~/server/better-auth/server";
 
 export const metadata: Metadata = {
   title: `Sign in — ${BRAND}`,
@@ -12,6 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
+  const session = await getSession();
+  if (session?.user) redirect("/dashboard");
+
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center px-4">
       {/* Subtle grid background */}

@@ -19,8 +19,16 @@ import { PreferencesSection } from "~/components/settings/preferences-section";
 import { NotificationsSection } from "~/components/settings/notifications-section";
 import { DangerZoneSection } from "~/components/settings/danger-zone-section";
 import { TrustSafetySection } from "~/components/settings/trust-safety-section";
+import type { IntegrationHealth } from "~/lib/integration-health";
 
-type Status = { gmail: boolean; googlecalendar: boolean };
+type Status = {
+  gmail: boolean;
+  googlecalendar: boolean;
+  integrations?: {
+    gmail: IntegrationHealth;
+    googlecalendar: IntegrationHealth;
+  };
+};
 
 const tabs = [
   { value: "profile", label: "Profile", icon: UserCircle02Icon },

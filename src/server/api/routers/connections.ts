@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { IntegrationHealth } from "~/lib/integration-health";
 import {
   corsairAccounts,
   corsairIntegrations,
@@ -36,7 +37,6 @@ export const connectionsRouter = createTRPCRouter({
       )
       .where(eq(corsairAccounts.tenantId, tenantId));
 
-    const connected = new Set(rows.map((r) => r.name));
     let subscriptions: WebhookSubscriptionStatus[] = [];
     try {
       subscriptions = await ctx.db
@@ -54,7 +54,7 @@ export const connectionsRouter = createTRPCRouter({
       );
     }
 
-    const accountHealth = (plugin: "gmail" | "googlecalendar") => {
+    const accountHealth = (plugin: "gmail" | "googlecalendar"): IntegrationHealth => {
       const row = rows.find((r) => r.name === plugin);
       const config =
         row?.config && typeof row.config === "object"
@@ -62,6 +62,8 @@ export const connectionsRouter = createTRPCRouter({
           : {};
       const sub = subscriptions.find((s) => s.plugin === plugin);
       return {
+        connected: Boolean(row),
+        healthy: Boolean(row),
         externalAccountId:
           typeof config.externalAccountId === "string"
             ? config.externalAccountId
@@ -73,16 +75,27 @@ export const connectionsRouter = createTRPCRouter({
           (typeof config.webhookStatus === "string"
             ? config.webhookStatus
             : "unknown"),
+        webhookStatus:
+          sub?.status ??
+          (typeof config.webhookStatus === "string"
+            ? config.webhookStatus
+            : "unknown"),
         expiresAt: sub?.expiresAt ?? null,
       };
     };
 
+    const gmail = accountHealth("gmail");
+    const googlecalendar = accountHealth("googlecalendar");
     return {
-      gmail: connected.has("gmail"),
-      googlecalendar: connected.has("googlecalendar"),
+      gmail: gmail.connected && gmail.healthy,
+      googlecalendar: googlecalendar.connected && googlecalendar.healthy,
+      integrations: {
+        gmail,
+        googlecalendar,
+      },
       webhooks: {
-        gmail: accountHealth("gmail"),
-        googlecalendar: accountHealth("googlecalendar"),
+        gmail,
+        googlecalendar,
       },
     };
   }),

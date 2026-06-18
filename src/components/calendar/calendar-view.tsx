@@ -474,6 +474,35 @@ export function CalendarView() {
 
         {/* Active view */}
         <div className="min-h-0 flex-1">
+          {events.error ? (
+            <div className="m-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm">
+              <p className="font-medium">
+                {events.error.data?.code === "PRECONDITION_FAILED"
+                  ? "Reconnect Google Calendar"
+                  : "Calendar sync issue"}
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {events.error.message}
+              </p>
+              <div className="mt-2 flex gap-2">
+                {events.error.data?.code === "PRECONDITION_FAILED" ? (
+                  <a
+                    href="/api/corsair/connect?plugin=googlecalendar"
+                    className="text-foreground hover:bg-accent rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+                  >
+                    Reconnect Calendar
+                  </a>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void events.refetch()}
+                  className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : null}
           {view === "month" && (
             <MonthGrid
               cursor={cursor}

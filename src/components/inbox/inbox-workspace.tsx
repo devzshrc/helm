@@ -992,18 +992,30 @@ export function InboxWorkspace({
             {!useExternal && threadsQuery.error ? (
               <div className="border-destructive/30 bg-destructive/10 mx-4 mb-2 rounded-lg border p-3 text-sm">
                 <div className="text-destructive font-medium">
-                  Inbox sync issue
+                  {threadsQuery.error.data?.code === "PRECONDITION_FAILED"
+                    ? "Reconnect Gmail"
+                    : "Inbox sync issue"}
                 </div>
                 <div className="text-muted-foreground mt-1 text-xs">
                   {threadsQuery.error.message}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void threadsQuery.refetch()}
-                  className="text-muted-foreground hover:bg-accent hover:text-foreground mt-2 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                >
-                  Retry
-                </button>
+                <div className="mt-2 flex gap-2">
+                  {threadsQuery.error.data?.code === "PRECONDITION_FAILED" ? (
+                    <a
+                      href="/api/corsair/connect?plugin=gmail"
+                      className="text-foreground hover:bg-accent rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+                    >
+                      Reconnect Gmail
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => void threadsQuery.refetch()}
+                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
               </div>
             ) : null}
 

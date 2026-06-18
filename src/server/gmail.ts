@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { type CorsairClient, withCorsair } from "~/server/corsair";
 import { sanitizeEmailHtml } from "~/server/sanitize";
@@ -35,6 +35,18 @@ function hasAttachment(messages: GmailMessage[]): boolean {
   return messages.some((m) => walk(m.payload));
 }
 
+async function mapConcurrent<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+) {
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += limit) {
+    out.push(...(await Promise.all(items.slice(i, i + limit).map(fn))));
+  }
+  return out;
+}
+
 /** List threads (inbox by default), summarized by their latest message. */
 export async function listThreads(
   tenantId: string,
@@ -54,8 +66,10 @@ export async function listThreads(
       .map((t) => t.id)
       .filter((x): x is string => !!x);
 
-    const threads = await Promise.all(
-      ids.map(async (id) => {
+    const threads = await mapConcurrent(
+      ids,
+      5,
+      async (id) => {
         const full = (await gmail.threads.get({ id, format: "full" })) as {
           messages?: GmailMessage[];
         };
@@ -75,7 +89,7 @@ export async function listThreads(
           ),
           hasAttachment: hasAttachment(messages),
         } satisfies ThreadRow;
-      }),
+      },
     );
 
     return threads.filter((t): t is ThreadRow => t !== null);
@@ -100,7 +114,31 @@ export async function listInboxCached(
     } catch {
       return null;
     }
-    if (!ents?.length) return null;
+    if (!ents?.length) {
+      const metaRows = await db
+        .select()
+        .from(emailMeta)
+        .where(eq(emailMeta.tenantId, tenantId))
+        .orderBy(desc(emailMeta.receivedAt))
+        .limit(maxResults);
+      if (metaRows.length === 0) return null;
+      return metaRows.map((row) => ({
+        id: row.gmailId,
+        threadId: row.threadId,
+        from: row.fromAddr ?? "",
+        fromName: row.fromAddr ?? "Unknown sender",
+        to: "",
+        subject: row.subject ?? "(no subject)",
+        snippet: row.snippet ?? "",
+        receivedAt: row.receivedAt?.getTime() ?? null,
+        labelIds: [],
+        unread: false,
+        messageCount: 1,
+        hasUnread: false,
+        hasAttachment: false,
+        priority: row.priority,
+      }));
+    }
 
     const byThread = new Map<string, GmailMessage[]>();
     for (const e of ents) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
@@ -10,6 +11,10 @@ import {
 import { getThread } from "~/server/gmail";
 import { extractEventFromThread, parseQuickEvent } from "~/lib/ai/events";
 import { env } from "~/env";
+import {
+  isReconnectRequiredError,
+  reconnectMessage,
+} from "~/lib/integration-health";
 
 /**
  * A usable fallback draft when AI extraction fails or returns nothing — seeded
@@ -46,7 +51,20 @@ const draftInput = z.object({
 export const calendarRouter = createTRPCRouter({
   list: protectedProcedure
     .input(z.object({ timeMin: z.string(), timeMax: z.string() }))
-    .query(({ ctx, input }) => listEvents(ctx.session.user.id, input)),
+    .query(async ({ ctx, input }) => {
+      try {
+        return await listEvents(ctx.session.user.id, input);
+      } catch (error) {
+        if (isReconnectRequiredError(error)) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: reconnectMessage("googlecalendar"),
+            cause: error,
+          });
+        }
+        throw error;
+      }
+    }),
 
   create: protectedProcedure
     .input(draftInput)

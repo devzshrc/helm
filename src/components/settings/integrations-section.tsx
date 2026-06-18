@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { api } from "~/trpc/react";
+import type { IntegrationHealth } from "~/lib/integration-health";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -20,11 +21,19 @@ import {
   Mail01Icon,
   Calendar03Icon,
   CheckmarkCircle02Icon,
+  AlertCircleIcon,
   LinkIcon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
 
-type Status = { gmail: boolean; googlecalendar: boolean };
+type Status = {
+  gmail: boolean;
+  googlecalendar: boolean;
+  integrations?: {
+    gmail: IntegrationHealth;
+    googlecalendar: IntegrationHealth;
+  };
+};
 
 export function IntegrationsSection({ status }: { status: Status }) {
   const router = useRouter();
@@ -55,9 +64,12 @@ export function IntegrationsSection({ status }: { status: Status }) {
   function row(
     label: string,
     icon: typeof Mail01Icon,
-    connected: boolean,
+    health: IntegrationHealth,
     plugin: "gmail" | "googlecalendar",
   ) {
+    const connected = health.connected && health.healthy;
+    const needsReconnect =
+      health.connected && !health.healthy && health.repairAction === "reconnect";
     return (
       <Item variant="outline" key={plugin}>
         <ItemMedia>
@@ -65,6 +77,13 @@ export function IntegrationsSection({ status }: { status: Status }) {
         </ItemMedia>
         <ItemContent>
           <ItemTitle>{label}</ItemTitle>
+          <p className="text-muted-foreground mt-1 text-xs">
+            {connected
+              ? health.externalAccountId ?? "Connected and ready"
+              : needsReconnect
+                ? "Connection needs to be refreshed"
+                : "Not connected"}
+          </p>
         </ItemContent>
         {connected ? (
           <div className="flex items-center gap-2">
@@ -96,11 +115,11 @@ export function IntegrationsSection({ status }: { status: Status }) {
             render={<a href={`/api/corsair/connect?plugin=${plugin}`} />}
           >
             <HugeiconsIcon
-              icon={LinkIcon}
+              icon={needsReconnect ? AlertCircleIcon : LinkIcon}
               strokeWidth={2}
               className="size-3.5"
             />
-            Connect
+            {needsReconnect ? "Reconnect" : "Connect"}
           </Button>
         )}
       </Item>
@@ -118,11 +137,30 @@ export function IntegrationsSection({ status }: { status: Status }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {row("Gmail", Mail01Icon, status.gmail, "gmail")}
+          {row(
+            "Gmail",
+            Mail01Icon,
+            status.integrations?.gmail ?? {
+              connected: status.gmail,
+              healthy: status.gmail,
+              externalAccountId: null,
+              status: "unknown",
+              webhookStatus: "unknown",
+              expiresAt: null,
+            },
+            "gmail",
+          )}
           {row(
             "Google Calendar",
             Calendar03Icon,
-            status.googlecalendar,
+            status.integrations?.googlecalendar ?? {
+              connected: status.googlecalendar,
+              healthy: status.googlecalendar,
+              externalAccountId: null,
+              status: "unknown",
+              webhookStatus: "unknown",
+              expiresAt: null,
+            },
             "googlecalendar",
           )}
         </CardContent>
