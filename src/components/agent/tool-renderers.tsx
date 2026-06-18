@@ -828,7 +828,7 @@ function ConnectionStatusBody({ data }: { data: ConnectionStatus }) {
             </span>
           ) : (
             <a
-              href={`/dashboard/connections?connect=${connectSlug}`}
+              href={`/api/corsair/connect?plugin=${connectSlug}`}
               className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors"
             >
               Connect <ChevronRight className="h-3 w-3" />

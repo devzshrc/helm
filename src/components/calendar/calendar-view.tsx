@@ -44,6 +44,7 @@ import { MonthGrid } from "~/components/calendar/month-grid";
 import { TimeGrid } from "~/components/calendar/time-grid";
 import { AgendaView } from "~/components/calendar/agenda-view";
 import { ConciergePanel } from "~/components/calendar/concierge-panel";
+import { ConnectionRequired } from "~/components/connection-required";
 
 type View = "month" | "week" | "day" | "agenda";
 const VIEWS: View[] = ["month", "week", "day", "agenda"];
@@ -482,33 +483,32 @@ export function CalendarView() {
         {/* Active view */}
         <div className="min-h-0 flex-1">
           {events.error ? (
-            <div className="border-destructive/30 bg-destructive/10 m-3 rounded-lg border p-3 text-sm">
-              <p className="font-medium">
-                {events.error.data?.code === "PRECONDITION_FAILED"
-                  ? "Reconnect Google Calendar"
-                  : "Calendar sync issue"}
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {events.error.message}
-              </p>
-              <div className="mt-2 flex gap-2">
-                {events.error.data?.code === "PRECONDITION_FAILED" ? (
-                  <a
-                    href="/api/corsair/connect?plugin=googlecalendar"
-                    className="text-foreground hover:bg-accent rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+            events.error.data?.code === "PRECONDITION_FAILED" ? (
+              <ConnectionRequired
+                className="m-3"
+                compact
+                plugins={["googlecalendar"]}
+                title="Reconnect Google Calendar"
+                description={events.error.message}
+                actionLabel="Reconnect"
+              />
+            ) : (
+              <div className="border-destructive/30 bg-destructive/10 m-3 rounded-md border p-3 text-sm">
+                <p className="font-medium">Calendar sync issue</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {events.error.message}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void events.refetch()}
+                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
                   >
-                    Reconnect Calendar
-                  </a>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void events.refetch()}
-                  className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
-                >
-                  Retry
-                </button>
+                    Retry
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : null}
           {view === "month" && (
             <MonthGrid

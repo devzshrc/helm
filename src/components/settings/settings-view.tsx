@@ -2,16 +2,15 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  UserCircle02Icon,
+  DangerIcon,
   LinkIcon,
+  Notification03Icon,
   PaintBrush01Icon,
   Settings02Icon,
-  Notification03Icon,
-  DangerIcon,
+  UserCircle02Icon,
 } from "@hugeicons/core-free-icons";
 import { ShieldCheck } from "lucide-react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { ProfileSection } from "~/components/settings/profile-section";
 import { IntegrationsSection } from "~/components/settings/integrations-section";
 import { AppearanceSection } from "~/components/settings/appearance-section";
@@ -30,15 +29,91 @@ type Status = {
   };
 };
 
-const tabs = [
-  { value: "profile", label: "Profile", icon: UserCircle02Icon },
-  { value: "integrations", label: "Integrations", icon: LinkIcon },
-  { value: "appearance", label: "Appearance", icon: PaintBrush01Icon },
-  { value: "preferences", label: "Preferences", icon: Settings02Icon },
-  { value: "notifications", label: "Notifications", icon: Notification03Icon },
-  { value: "trust", label: "Trust", icon: ShieldCheck, lucide: true },
-  { value: "danger", label: "Danger Zone", icon: DangerIcon },
+const sections = [
+  {
+    id: "profile",
+    label: "Profile",
+    description: "Your signed-in Helm identity.",
+    icon: UserCircle02Icon,
+  },
+  {
+    id: "integrations",
+    label: "Connected Accounts",
+    description: "Gmail and Google Calendar access.",
+    icon: LinkIcon,
+  },
+  {
+    id: "preferences",
+    label: "Preferences",
+    description: "Working hours, triage, and writing defaults.",
+    icon: Settings02Icon,
+  },
+  {
+    id: "notifications",
+    label: "Notifications",
+    description: "Alerts and approval reminders.",
+    icon: Notification03Icon,
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    description: "Theme and visual preferences.",
+    icon: PaintBrush01Icon,
+  },
+  {
+    id: "trust",
+    label: "Trust & Safety",
+    description: "Permissions, approvals, and data handling.",
+    icon: ShieldCheck,
+    lucide: true,
+  },
+  {
+    id: "danger",
+    label: "Danger Zone",
+    description: "Irreversible account actions.",
+    icon: DangerIcon,
+  },
 ] as const;
+
+function SectionShell({
+  id,
+  label,
+  description,
+  icon,
+  lucide,
+  children,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  icon: (typeof sections)[number]["icon"];
+  lucide?: boolean;
+  children: React.ReactNode;
+}) {
+  const Icon = icon;
+  return (
+    <section id={id} className="scroll-mt-20 border-t py-8 first:border-t-0">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="bg-muted/40 grid size-8 shrink-0 place-items-center rounded-md border">
+          {lucide ? (
+            <ShieldCheck className="text-muted-foreground size-4" />
+          ) : (
+            <HugeiconsIcon
+              icon={Icon as typeof UserCircle02Icon}
+              strokeWidth={2}
+              className="text-muted-foreground size-4"
+            />
+          )}
+        </span>
+        <div>
+          <h2 className="text-base font-semibold">{label}</h2>
+          <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function SettingsView({
   status,
@@ -48,52 +123,43 @@ export function SettingsView({
   user: { name: string; email: string; image?: string | null };
 }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-      <Tabs defaultValue="profile">
-        <TabsList
-          variant="line"
-          className="w-full justify-start overflow-x-auto"
-        >
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {"lucide" in tab ? (
-                <ShieldCheck className="h-4 w-4" />
-              ) : (
-                <HugeiconsIcon icon={tab.icon} strokeWidth={2} />
-              )}
-              <span className="hidden sm:inline">{tab.label}</span>
-            </TabsTrigger>
+    <div className="mx-auto grid max-w-6xl gap-8 p-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:p-8">
+      <aside className="hidden lg:block">
+        <nav className="sticky top-20 flex flex-col gap-1">
+          {sections.map((section) => (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md px-3 py-2 text-sm transition-colors"
+            >
+              {section.label}
+            </a>
           ))}
-        </TabsList>
-
-        <TabsContent value="profile">
+        </nav>
+      </aside>
+      <main className="bg-background min-w-0 rounded-md border px-4 lg:px-6">
+        <SectionShell {...sections[0]}>
           <ProfileSection user={user} />
-        </TabsContent>
-
-        <TabsContent value="integrations">
+        </SectionShell>
+        <SectionShell {...sections[1]}>
           <IntegrationsSection status={status} />
-        </TabsContent>
-
-        <TabsContent value="appearance">
-          <AppearanceSection />
-        </TabsContent>
-
-        <TabsContent value="preferences">
+        </SectionShell>
+        <SectionShell {...sections[2]}>
           <PreferencesSection />
-        </TabsContent>
-
-        <TabsContent value="notifications">
+        </SectionShell>
+        <SectionShell {...sections[3]}>
           <NotificationsSection />
-        </TabsContent>
-
-        <TabsContent value="trust">
+        </SectionShell>
+        <SectionShell {...sections[4]}>
+          <AppearanceSection />
+        </SectionShell>
+        <SectionShell {...sections[5]}>
           <TrustSafetySection />
-        </TabsContent>
-
-        <TabsContent value="danger">
+        </SectionShell>
+        <SectionShell {...sections[6]}>
           <DangerZoneSection />
-        </TabsContent>
-      </Tabs>
+        </SectionShell>
+      </main>
     </div>
   );
 }

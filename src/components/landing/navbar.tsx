@@ -52,7 +52,10 @@ export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center">
       <motion.div
         layout
-        transition={{ type: "spring", stiffness: 340, damping: 38, mass: 1 }}
+        transition={{
+          duration: reduce ? 0 : 0.18,
+          ease: [0.175, 0.885, 0.32, 1.1],
+        }}
         animate={scrolled ? "pill" : "bar"}
         variants={{
           bar: {
@@ -65,14 +68,14 @@ export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
           },
           pill: {
             width: "fit-content",
-            height: 44,
+            height: 40,
             borderRadius: 9999,
-            paddingLeft: 20,
-            paddingRight: 20,
-            marginTop: 12,
+            paddingLeft: 12,
+            paddingRight: 12,
+            marginTop: 10,
           },
         }}
-        className={`pointer-events-auto relative mx-auto flex max-w-6xl items-center gap-3 backdrop-blur-xl transition-colors duration-300 ${
+        className={`pointer-events-auto relative mx-auto flex max-w-6xl items-center gap-2 backdrop-blur-xl transition-colors duration-150 ${
           scrolled ? "bg-background/50" : "bg-transparent"
         }`}
       >
@@ -83,7 +86,11 @@ export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
         >
           <motion.div
             style={{ rotate }}
-            className="size-7 shrink-0 will-change-transform"
+            className={
+              scrolled
+                ? "size-6 shrink-0 will-change-transform"
+                : "size-7 shrink-0 will-change-transform"
+            }
           >
             <HelmMark className="size-full" />
           </motion.div>

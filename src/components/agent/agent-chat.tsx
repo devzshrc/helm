@@ -29,6 +29,7 @@ import { clearActivity } from "~/lib/agent-activity";
 import { cn } from "~/lib/utils";
 import { PremiumMarkdown } from "~/components/ui/premium-markdown";
 import { useDebouncedValue } from "~/hooks/use-debounced-value";
+import { ConnectionRequired } from "~/components/connection-required";
 
 /** No-op slot to suppress CopilotChatView's built-in composer. */
 const renderNothing = () => null;
@@ -96,6 +97,11 @@ export function AgentChat() {
     staleTime: 2 * 60_000,
     placeholderData: (previous) => previous,
   });
+  const connectionsQ = api.connections.status.useQuery(undefined, {
+    enabled: !!session && !authPending,
+    staleTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
+  });
   const createSession = api.agent.sessions.create.useMutation();
   const removeSession = api.agent.sessions.remove.useMutation();
   const renameSession = api.agent.sessions.rename.useMutation();
@@ -116,6 +122,9 @@ export function AgentChat() {
   const creatingRef = useRef(false);
   const lastUserTextRef = useRef("");
   const [runError, setRunError] = useState<string | null>(null);
+  const [blockedConnections, setBlockedConnections] = useState<
+    Array<"gmail" | "googlecalendar">
+  >([]);
   const [activeLoading, setActiveLoading] = useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const promptConsumedRef = useRef("");
@@ -208,8 +217,33 @@ export function AgentChat() {
       const t = text.trim();
       // Guard against double-fire (Enter+click, or before isRunning flips).
       if (!t || !activeId || submittingRef.current || agent.isRunning) return;
+      const lower = t.toLowerCase();
+      const needsGmail =
+        /\b(email|emails|mail|inbox|thread|threads|gmail|reply|draft|archive|newsletter|unread|sender)\b/.test(
+          lower,
+        );
+      const needsCalendar =
+        /\b(calendar|meeting|meetings|event|events|schedule|free slot|availability|available|invite|attendee)\b/.test(
+          lower,
+        );
+      const missing: Array<"gmail" | "googlecalendar"> = [];
+      if (needsGmail && connectionsQ.data && !connectionsQ.data.gmail) {
+        missing.push("gmail");
+      }
+      if (
+        needsCalendar &&
+        connectionsQ.data &&
+        !connectionsQ.data.googlecalendar
+      ) {
+        missing.push("googlecalendar");
+      }
+      if (missing.length > 0) {
+        setBlockedConnections(missing);
+        return;
+      }
       submittingRef.current = true;
       setRunError(null);
+      setBlockedConnections([]);
       clearActivity();
       lastUserTextRef.current = t;
       // Single path: every request goes through the agent router. The agent
@@ -225,7 +259,7 @@ export function AgentChat() {
         submittingRef.current = false;
       }
     },
-    [activeId, agent, copilotkit],
+    [activeId, agent, copilotkit, connectionsQ.data],
   );
 
   useEffect(() => {
@@ -404,6 +438,21 @@ export function AgentChat() {
 
           {/* Run-level error with retry (not just a toast). */}
           <AnimatePresence>
+            {blockedConnections.length > 0 && !agent.isRunning ? (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.15 }}
+                className="mx-auto w-full max-w-3xl px-3 pb-2"
+              >
+                <ConnectionRequired
+                  plugins={blockedConnections}
+                  title="Connect before asking Helm"
+                  description="This request needs workspace data that is not connected yet."
+                />
+              </motion.div>
+            ) : null}
             {runError && !agent.isRunning ? (
               <motion.div
                 initial={{ opacity: 0, y: 4 }}

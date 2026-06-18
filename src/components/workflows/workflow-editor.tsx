@@ -161,7 +161,7 @@ function StepCard({
     >
       <div className="bg-border h-3 w-px" />
       <Card
-        className="flex w-full items-center gap-3 rounded-lg p-4"
+        className="flex w-full items-center gap-3 rounded-md p-4"
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
@@ -172,7 +172,7 @@ function StepCard({
         >
           <GripVertical className="size-4" />
         </span>
-        <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-full border">
+        <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-md border">
           <NodeIcon type={node.type} className="text-primary" />
         </span>
         <div className="min-w-0 flex-1">
@@ -479,14 +479,14 @@ export function WorkflowEditor({ id }: { id: string }) {
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-20" />
           </div>
-          <Skeleton className="h-24 rounded-lg" />
-          <Skeleton className="h-32 rounded-lg" />
-          <Skeleton className="h-40 rounded-lg" />
-          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-24 rounded-md" />
+          <Skeleton className="h-32 rounded-md" />
+          <Skeleton className="h-40 rounded-md" />
+          <Skeleton className="h-48 rounded-md" />
         </div>
         <aside className="space-y-4">
-          <Skeleton className="h-48 rounded-lg" />
-          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-48 rounded-md" />
+          <Skeleton className="h-32 rounded-md" />
         </aside>
       </div>
     );
@@ -571,13 +571,13 @@ export function WorkflowEditor({ id }: { id: string }) {
         ) : null}
 
         {/* In-builder AI helper */}
-        <Card className="rounded-lg p-4">
+        <Card className="rounded-md p-4">
           <button
             type="button"
             onClick={() => setAiOpen((v) => !v)}
             className="flex w-full items-center gap-2 text-left"
           >
-            <span className="bg-primary/10 text-primary grid size-8 shrink-0 place-items-center rounded-lg">
+            <span className="bg-primary/10 text-primary grid size-8 shrink-0 place-items-center rounded-[6px]">
               <Sparkles className="size-4" />
             </span>
             <span className="min-w-0 flex-1">
@@ -626,9 +626,9 @@ export function WorkflowEditor({ id }: { id: string }) {
         </Card>
 
         {/* Trigger */}
-        <Card className="flex flex-col gap-4 rounded-lg p-5">
+        <Card className="flex flex-col gap-4 rounded-md p-4">
           <div className="flex items-start gap-3">
-            <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-full border">
+            <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-md border">
               <TriggerIcon type={trigger.type} className="text-primary" />
             </span>
             <div className="min-w-0 flex-1">
@@ -783,7 +783,7 @@ export function WorkflowEditor({ id }: { id: string }) {
           </div>
           <div className="flex flex-col gap-2">
             {runs.error ? (
-              <div className="border-destructive/30 bg-destructive/10 rounded-lg border p-3 text-sm">
+              <div className="border-destructive/30 bg-destructive/10 rounded-md border p-3 text-sm">
                 <p className="font-medium">Could not load recent runs.</p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   {runs.error.message}
@@ -791,7 +791,7 @@ export function WorkflowEditor({ id }: { id: string }) {
               </div>
             ) : runs.isLoading ? (
               Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-12 rounded-lg" />
+                <Skeleton key={index} className="h-12 rounded-md" />
               ))
             ) : (
               (runs.data ?? []).slice(0, 5).map((run) => (
@@ -806,7 +806,7 @@ export function WorkflowEditor({ id }: { id: string }) {
                       input: run.input,
                     })
                   }
-                  className={`hover:bg-accent/40 flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${RUN_BORDER[run.status] ?? "border-l-muted border-l-2"}`}
+                  className={`hover:bg-accent/40 flex items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors ${RUN_BORDER[run.status] ?? "border-l-muted border-l-2"}`}
                 >
                   <Badge
                     className={
@@ -834,7 +834,7 @@ export function WorkflowEditor({ id }: { id: string }) {
             {!runs.error &&
             !runs.isLoading &&
             (runs.data ?? []).length === 0 ? (
-              <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-6 text-center">
+              <div className="flex flex-col items-center gap-2 rounded-md border border-dashed py-6 text-center">
                 <Play className="text-muted-foreground/30 size-5" />
                 <p className="text-muted-foreground text-xs">
                   No runs yet. Use Test or wait for next webhook/schedule.
@@ -848,7 +848,7 @@ export function WorkflowEditor({ id }: { id: string }) {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <Card className="rounded-lg p-4">
+        <Card className="rounded-md p-4">
           <p className="text-sm font-semibold">Review</p>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3">
@@ -885,7 +885,7 @@ export function WorkflowEditor({ id }: { id: string }) {
           </div>
         </Card>
         {health.reasons.length > 0 || validation.warnings.length > 0 ? (
-          <Card className="rounded-lg p-4">
+          <Card className="rounded-md p-4">
             <p className="text-sm font-semibold">Health details</p>
             <div className="text-muted-foreground mt-3 flex flex-col gap-2 text-xs">
               {[

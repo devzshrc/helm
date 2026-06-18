@@ -18,6 +18,10 @@ import {
   generativeSurfaceSchema,
   intentRouteSchema,
 } from "~/lib/mastra/schemas";
+import {
+  isReconnectRequiredError,
+  reconnectMessage,
+} from "~/lib/integration-health";
 
 function tenantFromContext(context: unknown): string {
   const requestContext = (
@@ -70,6 +74,21 @@ const readOnly = {
   },
 } as const;
 
+function readableToolError(
+  plugin: "gmail" | "googlecalendar",
+  fallback: string,
+  error: unknown,
+) {
+  if (isReconnectRequiredError(error)) {
+    return {
+      error: reconnectMessage(plugin),
+      reconnectRequired: true,
+      plugin,
+    };
+  }
+  return { error: `${fallback}: ${String(error)}` };
+}
+
 export const searchEmailTool = createTool({
   id: "search_email",
   description:
@@ -92,7 +111,10 @@ export const searchEmailTool = createTool({
         })),
       };
     } catch (e) {
-      return { query, error: `Could not search mail: ${String(e)}` };
+      return {
+        query,
+        ...readableToolError("gmail", "Could not search mail", e),
+      };
     }
   },
 });
@@ -127,7 +149,10 @@ export const semanticSearchEmailTool = createTool({
         })),
       };
     } catch (e) {
-      return { query, error: `Semantic search failed: ${String(e)}` };
+      return {
+        query,
+        ...readableToolError("gmail", "Semantic search failed", e),
+      };
     }
   },
 });
@@ -151,7 +176,10 @@ export const getThreadTool = createTool({
         })),
       };
     } catch (e) {
-      return { threadId, error: `Could not load thread: ${String(e)}` };
+      return {
+        threadId,
+        ...readableToolError("gmail", "Could not load thread", e),
+      };
     }
   },
 });
@@ -181,7 +209,10 @@ export const draftEmailOnlyTool = createTool({
         draftBody,
       };
     } catch (e) {
-      return { threadId, error: `Could not generate draft: ${String(e)}` };
+      return {
+        threadId,
+        ...readableToolError("gmail", "Could not generate draft", e),
+      };
     }
   },
 });
@@ -197,7 +228,11 @@ export const listEventsTool = createTool({
       const events = await listEvents(tenantId, { timeMin, timeMax });
       return { timeMin, timeMax, events };
     } catch (e) {
-      return { timeMin, timeMax, error: `Could not load events: ${String(e)}` };
+      return {
+        timeMin,
+        timeMax,
+        ...readableToolError("googlecalendar", "Could not load events", e),
+      };
     }
   },
 });
@@ -287,7 +322,7 @@ export const findFreeTimeTool = createTool({
         timeMin,
         timeMax,
         durationMinutes,
-        error: `Could not check calendar: ${String(e)}`,
+        ...readableToolError("googlecalendar", "Could not check calendar", e),
       };
     }
   },

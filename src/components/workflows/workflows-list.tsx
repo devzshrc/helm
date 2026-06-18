@@ -191,13 +191,13 @@ export function WorkflowsList() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 p-4 lg:p-8">
-      <div className="flex flex-col gap-5 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4 lg:p-8">
+      <div className="flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-muted-foreground text-xs font-medium tracking-[0.18em] uppercase">
             Workflows
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
             Automations that explain themselves.
           </h1>
           <p className="text-muted-foreground mt-3 text-sm leading-6">
@@ -242,9 +242,9 @@ export function WorkflowsList() {
               key={t.id}
               onClick={() => createWorkflow({ templateId: t.id })}
               disabled={create.isPending}
-              className="hover:border-foreground/15 hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 text-left transition-all hover:shadow-sm disabled:opacity-60"
+              className="hover:border-foreground/15 hover:bg-accent/50 flex items-start gap-3 rounded-md border p-3 text-left transition-all disabled:opacity-60"
             >
-              <span className="bg-primary/10 text-primary mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg">
+              <span className="bg-primary/10 text-primary mt-0.5 grid size-8 shrink-0 place-items-center rounded-[6px]">
                 <TriggerIcon type={t.trigger.type} className="size-4" />
               </span>
               <span className="min-w-0">
@@ -297,7 +297,7 @@ export function WorkflowsList() {
             key={value}
             type="button"
             onClick={() => setFilter(value as Filter)}
-            className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+            className={`rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
               filter === value
                 ? (CHIP_COLORS[value] ??
                   "border-foreground/20 bg-foreground text-background")
@@ -310,7 +310,7 @@ export function WorkflowsList() {
       </div>
 
       {list.error ? (
-        <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-5">
+        <div className="border-destructive/30 bg-destructive/10 rounded-md border p-4">
           <p className="text-sm font-semibold">Could not load workflows.</p>
           <p className="text-muted-foreground mt-1 text-sm">
             {list.error.message}
@@ -331,7 +331,7 @@ export function WorkflowsList() {
           ))}
         </div>
       ) : (list.data ?? []).length === 0 ? (
-        <Empty className="min-h-[48vh] rounded-xl border border-dashed">
+        <Empty className="min-h-[48vh] rounded-md border border-dashed">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <HugeiconsIcon icon={WorkflowSquare03Icon} strokeWidth={2} />
@@ -368,15 +368,15 @@ export function WorkflowsList() {
               const stepCount = Array.isArray(wf.nodes) ? wf.nodes.length : 0;
               return (
                 <motion.div key={wf.id} layout variants={listItem} exit="exit">
-                  <Card className="hover:border-foreground/10 hover:bg-accent/20 overflow-hidden rounded-lg transition-all hover:shadow-sm">
-                    <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <Card className="hover:border-foreground/10 hover:bg-accent/20 overflow-hidden rounded-md transition-all">
+                    <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
                       <button
                         className="grid min-w-0 grid-cols-[auto_1fr] gap-4 text-left"
                         onClick={() =>
                           router.push(`/dashboard/workflows/${wf.id}`)
                         }
                       >
-                        <span className="bg-background flex size-10 items-center justify-center rounded-full border">
+                        <span className="bg-background flex size-10 items-center justify-center rounded-md border">
                           <TriggerIcon
                             type={trigger.type}
                             className="text-primary"
@@ -476,7 +476,7 @@ export function WorkflowsList() {
             })}
           </AnimatePresence>
           {visible.length === 0 ? (
-            <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-8 text-center text-sm">
+            <p className="text-muted-foreground rounded-md border border-dashed px-3 py-8 text-center text-sm">
               No workflows match this filter.
             </p>
           ) : null}
@@ -488,7 +488,7 @@ export function WorkflowsList() {
 
 function HealthStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-background rounded-lg border px-3 py-2">
+    <div className="bg-background rounded-md border px-3 py-2">
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
       <p className="text-muted-foreground text-xs font-medium">{label}</p>
     </div>

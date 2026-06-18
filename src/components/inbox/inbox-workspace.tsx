@@ -62,6 +62,7 @@ import {
   type EventInitial,
 } from "~/components/calendar/event-sheet";
 import { ShortcutsHelp } from "~/components/shortcuts-help";
+import { ConnectionRequired } from "~/components/connection-required";
 import { useShortcuts } from "~/hooks/use-shortcuts";
 import { useRealtime } from "~/hooks/use-realtime";
 import { useSyncCursor } from "~/hooks/use-sync-cursor";
@@ -789,7 +790,7 @@ export function InboxWorkspace({
 
             <div className="px-4 pb-2">
               <div
-                className="bg-muted/20 grid rounded-xl border p-1 sm:grid-cols-2 xl:grid-cols-4"
+                className="bg-muted/20 grid rounded-md border p-1 sm:grid-cols-2 xl:grid-cols-4"
                 aria-label="Mailbox section"
               >
                 {MAILBOXES.map(({ value, label, description, icon: Icon }) => (
@@ -801,15 +802,15 @@ export function InboxWorkspace({
                     onMouseEnter={() => prefetchMailbox(value)}
                     aria-pressed={mailbox === value}
                     className={cn(
-                      "flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                      "flex min-h-12 items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left transition-colors",
                       mailbox === value
-                        ? "bg-background text-foreground ring-border shadow-sm ring-1"
+                        ? "bg-background text-foreground ring-border shadow-[0_2px_2px_rgba(0,0,0,0.04)] ring-1"
                         : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
                     )}
                   >
                     <span
                       className={cn(
-                        "grid h-8 w-8 shrink-0 place-items-center rounded-md",
+                        "grid size-8 shrink-0 place-items-center rounded-[6px]",
                         mailbox === value
                           ? "bg-primary text-primary-foreground"
                           : "bg-background text-muted-foreground",
@@ -817,11 +818,11 @@ export function InboxWorkspace({
                     >
                       <Icon className="h-4 w-4" />
                     </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 leading-none">
                       <span className="block text-sm font-semibold">
                         {label}
                       </span>
-                      <span className="text-muted-foreground block truncate text-xs">
+                      <span className="text-muted-foreground mt-1 block truncate text-xs leading-4">
                         {description}
                       </span>
                     </span>
@@ -1063,33 +1064,34 @@ export function InboxWorkspace({
             ) : null}
 
             {!useExternal && threadsQuery.error ? (
-              <div className="border-destructive/30 bg-destructive/10 mx-4 mb-2 rounded-lg border p-3 text-sm">
-                <div className="text-destructive font-medium">
-                  {threadsQuery.error.data?.code === "PRECONDITION_FAILED"
-                    ? "Reconnect Gmail"
-                    : "Inbox sync issue"}
-                </div>
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {threadsQuery.error.message}
-                </div>
-                <div className="mt-2 flex gap-2">
-                  {threadsQuery.error.data?.code === "PRECONDITION_FAILED" ? (
-                    <a
-                      href="/api/corsair/connect?plugin=gmail"
-                      className="text-foreground hover:bg-accent rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+              threadsQuery.error.data?.code === "PRECONDITION_FAILED" ? (
+                <ConnectionRequired
+                  className="mx-4 mb-2"
+                  compact
+                  plugins={["gmail"]}
+                  title="Reconnect Gmail"
+                  description={threadsQuery.error.message}
+                  actionLabel="Reconnect"
+                />
+              ) : (
+                <div className="border-destructive/30 bg-destructive/10 mx-4 mb-2 rounded-md border p-3 text-sm">
+                  <div className="text-destructive font-medium">
+                    Inbox sync issue
+                  </div>
+                  <div className="text-muted-foreground mt-1 text-xs">
+                    {threadsQuery.error.message}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void threadsQuery.refetch()}
+                      className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
                     >
-                      Reconnect Gmail
-                    </a>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => void threadsQuery.refetch()}
-                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    Retry
-                  </button>
+                      Retry
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )
             ) : null}
 
             <div className="min-h-0 flex-1">
