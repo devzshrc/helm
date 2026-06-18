@@ -1,0 +1,95 @@
+{"kind":"deck","id":"pr/9eeb66","name":"Deck"}
+{"kind":"layout","layoutId":"1ed867ee-36ec-43ec-b850-0fced0d78092","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"e39be8d6-48c1-4fed-b8b1-b9d7c0e86422","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/d3itx4","slide":1,"title":"HELM","textShapes":5}
+{"kind":"textbox","id":"sh/uxc3ylc7","slide":1,"text":"HELM","textPreview":"HELM","textChars":4,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/c3ylc7u5","slide":1,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/j6tovaho","slide":1,"text":"AI chief of staff\nfor mail and calendar.","textPreview":"AI chief of staff | for mail and calendar.","textChars":40,"textLines":2,"bbox":[80,170,760,180]}
+{"kind":"textbox","id":"sh/ulwval87","slide":1,"text":"A fast, approval-first workspace for inbox triage, scheduling, and lightweight automation.","textPreview":"A fast, approval-first workspace for inbox triage, scheduling, and lightweight automation.","textChars":90,"textLines":1,"bbox":[80,374,620,70]}
+{"kind":"shape","id":"sh/1cfa9w3m","slide":1,"bbox":[880,168,230,230]}
+{"kind":"textbox","id":"sh/crmhk3q5","slide":1,"text":"H","textPreview":"H","textChars":1,"textLines":1,"bbox":[880,211,230,140]}
+{"kind":"notes","id":"nt/d3itx4","slide":1,"text":""}
+{"kind":"slide","id":"sl/gjxkft","slide":2,"title":"PROBLEM","textShapes":9}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":2,"text":"PROBLEM","textPreview":"PROBLEM","textChars":7,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/i5sneloj","slide":2,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":2,"text":"Knowledge work runs on scattered loops.","textPreview":"Knowledge work runs on scattered loops.","textChars":39,"textLines":1,"bbox":[80,132,850,72]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":2,"bbox":[80,270,10,10]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":2,"text":"Inbox is the queue","textPreview":"Inbox is the queue","textChars":18,"textLines":1,"bbox":[108,260,900,30]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":2,"text":"Important threads, receipts, newsletters, and requests all compete for attention.","textPreview":"Important threads, receipts, newsletters, and requests all compete for attention.","textChars":81,"textLines":1,"bbox":[108,294,900,42]}
+{"kind":"shape","id":"sh/p8nqxs72","slide":2,"bbox":[80,348,10,10]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":2,"text":"Calendar is the constraint","textPreview":"Calendar is the constraint","textChars":26,"textLines":1,"bbox":[108,338,900,30]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":2,"text":"Scheduling and follow-ups require context switching and manual judgment.","textPreview":"Scheduling and follow-ups require context switching and manual judgment.","textChars":72,"textLines":1,"bbox":[108,372,900,42]}
+{"kind":"shape","id":"sh/72x4nap4","slide":2,"bbox":[80,426,10,10]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":2,"text":"Automation is too hard","textPreview":"Automation is too hard","textChars":22,"textLines":1,"bbox":[108,416,900,30]}
+{"kind":"textbox","id":"sh/p8nqxs72","slide":2,"text":"Most users know what they want automated but cannot translate intent into rules.","textPreview":"Most users know what they want automated but cannot translate intent into rules.","textChars":80,"textLines":1,"bbox":[108,450,900,42]}
+{"kind":"notes","id":"nt/gjxkft","slide":2,"text":""}
+{"kind":"slide","id":"sl/o37bab","slide":3,"title":"PRODUCT","textShapes":11}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":3,"text":"PRODUCT","textPreview":"PRODUCT","textChars":7,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/sfil0rqd","slide":3,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/z61032ls","slide":3,"text":"One workspace. Four simple surfaces.","textPreview":"One workspace. Four simple surfaces.","textChars":36,"textLines":1,"bbox":[80,122,760,64]}
+{"kind":"shape","id":"sh/al87ed8b","slide":3,"bbox":[80,245,520,112]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":3,"text":"Inbox","textPreview":"Inbox","textChars":5,"textLines":1,"bbox":[108,267,260,28]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":3,"text":"Triage, reply, archive, and act from one reader.","textPreview":"Triage, reply, archive, and act from one reader.","textChars":48,"textLines":1,"bbox":[108,303,440,34]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":3,"bbox":[645,245,520,112]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":3,"text":"Calendar","textPreview":"Calendar","textChars":8,"textLines":1,"bbox":[673,267,260,28]}
+{"kind":"textbox","id":"sh/8z25kb6x","slide":3,"text":"Find time, prep meetings, and create events.","textPreview":"Find time, prep meetings, and create events.","textChars":44,"textLines":1,"bbox":[673,303,440,34]}
+{"kind":"shape","id":"sh/1gvy90je","slide":3,"bbox":[80,395,520,112]}
+{"kind":"textbox","id":"sh/qtcj6tov","slide":3,"text":"Agent","textPreview":"Agent","textChars":5,"textLines":1,"bbox":[108,417,260,28]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":3,"text":"Ask Helm to search, draft, explain, and prepare actions.","textPreview":"Ask Helm to search, draft, explain, and prepare actions.","textChars":56,"textLines":1,"bbox":[108,453,440,34]}
+{"kind":"shape","id":"sh/87ed8bat","slide":3,"bbox":[645,395,520,112]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":3,"text":"Workflows","textPreview":"Workflows","textChars":9,"textLines":1,"bbox":[673,417,260,28]}
+{"kind":"textbox","id":"sh/q1orytsv","slide":3,"text":"Turn repeated behavior into review-first automation.","textPreview":"Turn repeated behavior into review-first automation.","textChars":52,"textLines":1,"bbox":[673,453,440,34]}
+{"kind":"notes","id":"nt/o37bab","slide":3,"text":""}
+{"kind":"slide","id":"sl/7merez","slide":4,"title":"WORKFLOW","textShapes":12}
+{"kind":"textbox","id":"sh/2p8nqxs7","slide":4,"text":"WORKFLOW","textPreview":"WORKFLOW","textChars":8,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/9gr2p8nq","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/gvy90je9","slide":4,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/r2p8nqxs","slide":4,"text":"The product loop is intentionally small.","textPreview":"The product loop is intentionally small.","textChars":40,"textLines":1,"bbox":[80,120,800,64]}
+{"kind":"shape","id":"sh/2hwfyxob","slide":4,"bbox":[80,292,220,126]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":4,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[102,312,40,30]}
+{"kind":"textbox","id":"sh/kjm1cfa9","slide":4,"text":"Connect","textPreview":"Connect","textChars":7,"textLines":1,"bbox":[102,350,150,36]}
+{"kind":"shape","id":"sh/rqd4vmtw","slide":4,"bbox":[306,356,48,0]}
+{"kind":"shape","id":"sh/25kb6xkf","slide":4,"bbox":[362,292,220,126]}
+{"kind":"textbox","id":"sh/4fu18jqh","slide":4,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[384,312,40,30]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":4,"text":"Ask","textPreview":"Ask","textChars":3,"textLines":1,"bbox":[384,350,150,36]}
+{"kind":"shape","id":"sh/m94fu18j","slide":4,"bbox":[588,356,48,0]}
+{"kind":"shape","id":"sh/fu18jqh0","slide":4,"bbox":[644,292,220,126]}
+{"kind":"textbox","id":"sh/83itgfml","slide":4,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[666,312,40,30]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":4,"text":"Review","textPreview":"Review","textChars":6,"textLines":1,"bbox":[666,350,150,36]}
+{"kind":"shape","id":"sh/qxs72x4n","slide":4,"bbox":[870,356,48,0]}
+{"kind":"shape","id":"sh/fil0rqd4","slide":4,"bbox":[926,292,220,126]}
+{"kind":"textbox","id":"sh/4zidonyd","slide":4,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[948,312,40,30]}
+{"kind":"textbox","id":"sh/xkf6dcbu","slide":4,"text":"Automate","textPreview":"Automate","textChars":8,"textLines":1,"bbox":[948,350,150,36]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":4,"text":"Every risky action stays explicit: users review before Helm sends, deletes, schedules, or enables automation.","textPreview":"Every risky action stays explicit: users review before Helm sends, deletes, schedules, or enables automation.","textChars":109,"textLines":1,"bbox":[80,500,820,60]}
+{"kind":"notes","id":"nt/7merez","slide":4,"text":""}
+{"kind":"slide","id":"sl/5zgxc3","slide":5,"title":"WHY HELM","textShapes":9}
+{"kind":"textbox","id":"sh/4byhgn29","slide":5,"text":"WHY HELM","textPreview":"WHY HELM","textChars":8,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/m58z25kb","slide":5,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":5,"text":"Built for trust, speed, and daily use.","textPreview":"Built for trust, speed, and daily use.","textChars":38,"textLines":1,"bbox":[80,124,820,64]}
+{"kind":"shape","id":"sh/4nap4r65","slide":5,"bbox":[80,268,10,10]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":5,"text":"Grounded in real data","textPreview":"Grounded in real data","textChars":21,"textLines":1,"bbox":[108,258,900,30]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":5,"text":"Answers are based on searched mail, opened threads, and calendar events.","textPreview":"Answers are based on searched mail, opened threads, and calendar events.","textChars":72,"textLines":1,"bbox":[108,292,900,42]}
+{"kind":"shape","id":"sh/tgfmlkjm","slide":5,"bbox":[80,346,10,10]}
+{"kind":"textbox","id":"sh/4vmtwra5","slide":5,"text":"Approval-first writes","textPreview":"Approval-first writes","textChars":21,"textLines":1,"bbox":[108,336,900,30]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":5,"text":"Drafts and proposed actions are visible before anything changes.","textPreview":"Drafts and proposed actions are visible before anything changes.","textChars":64,"textLines":1,"bbox":[108,370,900,42]}
+{"kind":"shape","id":"sh/7qpg3ex0","slide":5,"bbox":[80,424,10,10]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":5,"text":"Simple automation","textPreview":"Simple automation","textChars":17,"textLines":1,"bbox":[108,414,900,30]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":5,"text":"Users describe intent, review a workflow, test it, then enable manually.","textPreview":"Users describe intent, review a workflow, test it, then enable manually.","textChars":72,"textLines":1,"bbox":[108,448,900,42]}
+{"kind":"notes","id":"nt/5zgxc3","slide":5,"text":""}
+{"kind":"slide","id":"sl/99ux3b","slide":6,"title":"NEXT","textShapes":8}
+{"kind":"textbox","id":"sh/4byhgn29","slide":6,"text":"NEXT","textPreview":"NEXT","textChars":4,"textLines":1,"bbox":[80,64,400,24]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[80,664,60,22]}
+{"kind":"shape","id":"sh/m58z25kb","slide":6,"bbox":[130,675,180,0]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":6,"text":"Beta now. Pro and Team later.","textPreview":"Beta now. Pro and Team later.","textChars":29,"textLines":1,"bbox":[80,128,760,72]}
+{"kind":"shape","id":"sh/4nap4r65","slide":6,"bbox":[80,270,340,150]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":6,"text":"Current ask","textPreview":"Current ask","textChars":11,"textLines":1,"bbox":[108,298,240,32]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":6,"text":"Pilot users, sharp feedback, and repeated workflow patterns to automate.","textPreview":"Pilot users, sharp feedback, and repeated workflow patterns to automate.","textChars":72,"textLines":1,"bbox":[108,342,270,56]}
+{"kind":"shape","id":"sh/tgfmlkjm","slide":6,"bbox":[472,270,340,150]}
+{"kind":"textbox","id":"sh/4vmtwra5","slide":6,"text":"Monetization","textPreview":"Monetization","textChars":12,"textLines":1,"bbox":[500,298,240,32]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":6,"text":"Free Beta → Pro for power users → Team for shared workflows and admin controls.","textPreview":"Free Beta → Pro for power users → Team for shared workflows and admin controls.","textChars":79,"textLines":1,"bbox":[500,342,270,56]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":6,"text":"helm.devzshrc.in","textPreview":"helm.devzshrc.in","textChars":16,"textLines":1,"bbox":[80,520,420,38]}
+{"kind":"notes","id":"nt/99ux3b","slide":6,"text":""}
