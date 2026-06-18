@@ -95,7 +95,15 @@ export function ThreadList({
     return (
       <div className="flex flex-col gap-2 p-3">
         {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
+          <div
+            key={i}
+            className="bg-card/50 flex h-14 items-center gap-3 rounded-lg border px-3"
+          >
+            <Skeleton className="size-3 rounded-full" />
+            <Skeleton className="h-4 w-28 shrink-0" />
+            <Skeleton className="h-4 min-w-0 flex-1" />
+            <Skeleton className="h-4 w-12 shrink-0" />
+          </div>
         ))}
       </div>
     );

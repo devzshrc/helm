@@ -374,15 +374,16 @@ export function CommandCenter() {
   const [submitted, setSubmitted] = useState("");
   const debouncedSubmitted = useDebouncedValue(submitted, 250);
   const summary = api.dashboard.summary.useQuery(undefined, {
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: 30_000,
     placeholderData: (previous) => previous,
   });
   // Scheduling proposals the concierge is holding for approval — surfaced on
   // the dashboard so an inbound interview/meeting email shows up here too.
   const scheduling = api.concierge.pending.useQuery(undefined, {
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: 30_000,
+    placeholderData: (previous) => previous,
   });
   const search = api.search.unified.useQuery(
     { query: debouncedSubmitted, limit: 8 },

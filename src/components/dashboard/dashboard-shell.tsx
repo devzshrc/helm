@@ -2,18 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 
 import { AppSidebar } from "~/components/app-sidebar";
 import { CommandPalette } from "~/components/command-palette";
 import { ConnectGate } from "~/components/connect-gate";
-import { HelmMark } from "~/components/helm-mark";
 import { PageTransition } from "~/components/page-transition";
+import { InboxRouteSkeleton } from "~/components/route-skeletons";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { authClient } from "~/server/better-auth/client";
 import { api } from "~/trpc/react";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const {
     data: status,
@@ -22,6 +24,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   } = api.connections.status.useQuery(undefined, {
     enabled: Boolean(session?.user),
     retry: false,
+    staleTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
   });
 
   useEffect(() => {
@@ -36,27 +40,41 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     }
   }, [router, statusError]);
 
-  if (sessionPending || (session && statusPending)) {
+  useEffect(() => {
+    if (!session?.user || !status?.gmail || !status?.googlecalendar) return;
+    const now = new Date();
+    const calendarRange = {
+      timeMin: startOfWeek(startOfMonth(now)).toISOString(),
+      timeMax: endOfWeek(endOfMonth(now)).toISOString(),
+    };
+    void utils.mail.list.prefetch({ limit: 25 });
+    void utils.mail.list.prefetch({ labelIds: ["SENT"], limit: 25 });
+    void utils.mail.list.prefetch({ labelIds: ["STARRED"], limit: 25 });
+    void utils.mail.list.prefetch({ labelIds: ["TRASH"], limit: 25 });
+    void utils.calendar.list.prefetch(calendarRange);
+    void utils.dashboard.summary.prefetch();
+    void utils.workflows.list.prefetch();
+    void utils.agent.sessions.list.prefetch();
+    void utils.preferences.get.prefetch();
+  }, [session?.user, status?.gmail, status?.googlecalendar, utils]);
+
+  if (sessionPending) {
     return (
-      <DashboardLoading
-        label={
-          sessionPending
-            ? "Checking your session"
-            : "Checking Gmail and Calendar"
-        }
-      />
+      <DashboardChrome>
+        <InboxRouteSkeleton withHeader={false} />
+      </DashboardChrome>
     );
   }
 
   if (!session?.user) {
-    return <DashboardLoading label="Redirecting to sign in" />;
+    return (
+      <DashboardChrome>
+        <InboxRouteSkeleton withHeader={false} />
+      </DashboardChrome>
+    );
   }
 
-  if (!status) {
-    return <DashboardLoading label="Checking Gmail and Calendar" />;
-  }
-
-  if (!status?.gmail || !status?.googlecalendar) {
+  if (!statusPending && status && (!status.gmail || !status.googlecalendar)) {
     return <ConnectGate status={status} />;
   }
 
@@ -66,6 +84,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     avatar: session.user.image ?? "",
   };
 
+  return (
+    <DashboardChrome user={user}>
+      <PageTransition>{children}</PageTransition>
+      {statusPending ? (
+        <div className="text-muted-foreground bg-background/90 pointer-events-none fixed top-3 right-4 z-50 rounded-full border px-3 py-1 text-xs shadow-sm backdrop-blur">
+          Checking integrations…
+        </div>
+      ) : null}
+    </DashboardChrome>
+  );
+}
+
+function DashboardChrome({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user?: { name: string; email: string; avatar: string };
+}) {
   return (
     <SidebarProvider
       className="h-svh overflow-hidden"
@@ -78,30 +115,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     >
       <AppSidebar variant="inset" user={user} />
       <SidebarInset className="min-w-0 overflow-hidden">
-        <PageTransition>{children}</PageTransition>
+        {children}
       </SidebarInset>
       <CommandPalette />
     </SidebarProvider>
-  );
-}
-
-function DashboardLoading({ label }: { label: string }) {
-  return (
-    <div className="bg-background flex min-h-svh items-center justify-center p-6">
-      <div className="flex w-full max-w-sm flex-col items-center gap-5 text-center">
-        <HelmMark className="size-12" />
-        <div>
-          <p className="text-sm font-semibold">{label}</p>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Preparing your workspace.
-          </p>
-        </div>
-        <div className="w-full space-y-2">
-          <div className="bg-muted h-3 animate-pulse rounded-full" />
-          <div className="bg-muted/70 mx-auto h-3 w-4/5 animate-pulse rounded-full" />
-          <div className="bg-muted/50 mx-auto h-3 w-2/3 animate-pulse rounded-full" />
-        </div>
-      </div>
-    </div>
   );
 }

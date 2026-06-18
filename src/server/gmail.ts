@@ -95,14 +95,22 @@ export async function listThreads(
   });
 }
 
+function labelsMatch(messages: GmailMessage[], labelIds: string[]) {
+  if (labelIds.length === 0) return true;
+  return labelIds.every((label) =>
+    messages.some((message) => (message.labelIds ?? []).includes(label)),
+  );
+}
+
 /**
- * Inbox list from Corsair's local cache (corsair_entities) — avoids hitting
- * Google on every load. Returns null when the cache is empty so the caller can
- * fall back to a live fetch (which repopulates the cache).
+ * Thread list from Corsair's local cache (corsair_entities) — avoids hitting
+ * Google on every load and supports familiar mailbox labels. Returns null when
+ * the cache has no usable data so callers can fall back to a live fetch.
  */
-export async function listInboxCached(
+export async function listThreadsCached(
   tenantId: string,
   maxResults = 25,
+  labelIds: string[] = ["INBOX"],
 ): Promise<ThreadRow[] | null> {
   return withCorsair(async (c) => {
     let ents;
@@ -114,6 +122,7 @@ export async function listInboxCached(
       return null;
     }
     if (!ents?.length) {
+      if (labelIds.some((label) => label !== "INBOX")) return null;
       const metaRows = await db
         .select()
         .from(emailMeta)
@@ -154,9 +163,16 @@ export async function listInboxCached(
         (a, b) =>
           (epochMs(a.internalDate) ?? 0) - (epochMs(b.internalDate) ?? 0),
       );
-      const latest = msgs[msgs.length - 1];
+      if (!labelsMatch(msgs, labelIds)) continue;
+      const summaryLabels = labelIds.filter((label) => label !== "INBOX");
+      const candidates =
+        summaryLabels.length > 0
+          ? msgs.filter((m) =>
+              summaryLabels.some((label) => (m.labelIds ?? []).includes(label)),
+            )
+          : msgs;
+      const latest = candidates[candidates.length - 1];
       if (!latest) continue;
-      if (!(latest.labelIds ?? []).includes("INBOX")) continue;
       rows.push({
         ...summarize(latest),
         threadId: tid,
@@ -168,6 +184,10 @@ export async function listInboxCached(
     rows.sort((a, b) => (b.receivedAt ?? 0) - (a.receivedAt ?? 0));
     return rows.slice(0, maxResults);
   });
+}
+
+export function listInboxCached(tenantId: string, maxResults = 25) {
+  return listThreadsCached(tenantId, maxResults, ["INBOX"]);
 }
 
 export type ThreadMessage = MessageSummary & { html: string };

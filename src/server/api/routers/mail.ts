@@ -9,6 +9,7 @@ import {
   archiveThread,
   getThread,
   listInboxCached,
+  listThreadsCached,
   listLabelNames,
   listThreads,
   markThreadRead,
@@ -188,10 +189,13 @@ export const mailRouter = createTRPCRouter({
           // Fall back when the cache is null OR empty — an empty array is NOT
           // nullish, so `??=` alone would strand the inbox blank when the local
           // message cache hasn't been populated (only threads/sent synced).
-          let threads =
-            !input?.q && !input?.labelIds
-              ? await listInboxCached(tenantId, limit)
-              : null;
+          let threads = !input?.q
+            ? await listThreadsCached(
+                tenantId,
+                limit,
+                input?.labelIds?.length ? input.labelIds : ["INBOX"],
+              )
+            : null;
           if (!threads || threads.length === 0) {
             threads = await listThreads(tenantId, {
               q: input?.q,

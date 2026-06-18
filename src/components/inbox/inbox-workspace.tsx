@@ -203,9 +203,9 @@ export function InboxWorkspace({
       enabled: !useExternal,
       placeholderData: (previous) => previous,
       staleTime: 30_000,
-      // No interval polling — refreshes are driven by the webhook change
-      // cursor (useSyncCursor below) plus window-focus.
-      refetchOnWindowFocus: true,
+      // No interval or focus polling — refreshes are driven by the webhook
+      // change cursor (useSyncCursor below) and explicit user actions.
+      refetchOnWindowFocus: false,
     },
   );
   const allThreads = useMemo(
@@ -371,6 +371,19 @@ export function InboxWorkspace({
     setLimit(25);
     setServerSearch("");
   }, []);
+
+  const prefetchMailbox = useCallback(
+    (value: MailboxMode) => {
+      const box = MAILBOXES.find((item) => item.value === value);
+      void utils.mail.list.prefetch({
+        q: undefined,
+        labelIds: box?.labelIds,
+        limit: 25,
+        mode: undefined,
+      });
+    },
+    [utils],
+  );
 
   // Auto-label dialog
   const [autoOpen, setAutoOpen] = useState(false);
@@ -784,6 +797,8 @@ export function InboxWorkspace({
                     key={value}
                     type="button"
                     onClick={() => switchMailbox(value)}
+                    onFocus={() => prefetchMailbox(value)}
+                    onMouseEnter={() => prefetchMailbox(value)}
                     aria-pressed={mailbox === value}
                     className={cn(
                       "flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
@@ -825,6 +840,11 @@ export function InboxWorkspace({
                   : ""}
               </p>
             )}
+            {!activeServerSearch && threadsQuery.isFetching && !loading ? (
+              <p className="text-muted-foreground px-4 pb-1 text-xs">
+                Refreshing {activeMailbox.label.toLowerCase()}…
+              </p>
+            ) : null}
 
             {/* Filter chips + select — single row */}
             <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-4 pb-2">

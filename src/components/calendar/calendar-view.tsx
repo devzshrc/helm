@@ -133,10 +133,11 @@ export function CalendarView() {
       timeMin: range.start.toISOString(),
       timeMax: range.end.toISOString(),
     },
-    // No interval polling — refreshed via the webhook change cursor + focus.
+    // No interval or focus polling — refreshed via the webhook change cursor
+    // and explicit user actions.
     {
       staleTime: 60_000,
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       placeholderData: (previous) => previous,
     },
   );
